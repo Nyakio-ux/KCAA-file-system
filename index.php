@@ -70,8 +70,8 @@
                             '66%': { transform: 'translateY(8px) rotate(-1deg)' },
                         },
                         glow: {
-                            'from': { boxShadow: '0 0 20px rgba(59, 130, 246, 0.3)' },
-                            'to': { boxShadow: '0 0 30px rgba(59, 130, 246, 0.6)' },
+                            'from': { boxShadow: '0 0 20px rgba(59, 130, 246, 0.2)' },
+                            'to': { boxShadow: '0 0 30px rgba(59, 130, 246, 0.3)' },
                         }
                     },
                     backdropBlur: {
@@ -82,33 +82,33 @@
         }
     </script>
 </head>
-<body class="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 relative overflow-hidden">
-    <!-- Animated Background Elements -->
+<body class="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-gray-900 relative overflow-hidden">
+    
     <div class="fixed inset-0 pointer-events-none">
         <!-- Floating Documents -->
-        <div class="absolute top-[15%] left-[10%] text-blue-400/20 text-3xl animate-float">
+        <div class="absolute top-[15%] left-[10%] text-blue-500/10 text-3xl animate-float">
             <i class="fas fa-file-alt"></i>
         </div>
-        <div class="absolute top-[25%] right-[12%] text-orange-400/20 text-2xl animate-float" style="animation-delay: 1.5s;">
+        <div class="absolute top-[25%] right-[12%] text-orange-500/10 text-2xl animate-float" style="animation-delay: 1.5s;">
             <i class="fas fa-folder-open"></i>
         </div>
-        <div class="absolute bottom-[30%] left-[8%] text-blue-300/20 text-2xl animate-float" style="animation-delay: 3s;">
+        <div class="absolute bottom-[30%] left-[8%] text-blue-400/10 text-2xl animate-float" style="animation-delay: 3s;">
             <i class="fas fa-cloud-upload-alt"></i>
         </div>
-        <div class="absolute bottom-[15%] right-[15%] text-orange-300/20 text-3xl animate-float" style="animation-delay: 4.5s;">
+        <div class="absolute bottom-[15%] right-[15%] text-orange-400/10 text-3xl animate-float" style="animation-delay: 4.5s;">
             <i class="fas fa-shield-alt"></i>
         </div>
-        <div class="absolute top-[50%] left-[5%] text-blue-400/20 text-2xl animate-float" style="animation-delay: 2s;">
+        <div class="absolute top-[50%] left-[5%] text-blue-500/10 text-2xl animate-float" style="animation-delay: 2s;">
             <i class="fas fa-database"></i>
         </div>
-        <div class="absolute top-[60%] right-[8%] text-orange-400/20 text-2xl animate-float" style="animation-delay: 6s;">
+        <div class="absolute top-[60%] right-[8%] text-orange-500/10 text-2xl animate-float" style="animation-delay: 6s;">
             <i class="fas fa-lock"></i>
         </div>
         
         <!-- Gradient Orbs -->
-        <div class="absolute top-20 -left-20 w-72 h-72 bg-blue-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse"></div>
-        <div class="absolute bottom-20 -right-20 w-72 h-72 bg-orange-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse" style="animation-delay: 3s;"></div>
-        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-blue-400 to-orange-400 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-pulse" style="animation-delay: 1.5s;"></div>
+        <div class="absolute top-20 -left-20 w-72 h-72 bg-blue-600 rounded-full mix-blend-multiply filter blur-xl opacity-5 animate-pulse"></div>
+        <div class="absolute bottom-20 -right-20 w-72 h-72 bg-orange-600 rounded-full mix-blend-multiply filter blur-xl opacity-5 animate-pulse" style="animation-delay: 3s;"></div>
+        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-blue-500 to-orange-500 rounded-full mix-blend-multiply filter blur-3xl opacity-3 animate-pulse" style="animation-delay: 1.5s;"></div>
     </div>
 
     <!-- Main Content -->
@@ -116,8 +116,8 @@
         <div class="w-full max-w-md">
             <!-- Login Card -->
             <div class="bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 overflow-hidden animate-slideUp">
-                <div class="px-8 pt-8 pb-6 text-center bg-gradient-to-r from-blue-600/20 to-orange-600/20">
-                    <div class="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500 to-orange-500 text-white text-3xl shadow-lg shadow-blue-500/30 mb-6 animate-glow">
+                <div class="px-8 pt-8 pb-6 text-center bg-slate-800/20">
+                    <div class="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-600 to-orange-600 text-white text-3xl shadow-lg shadow-blue-500/20 mb-6 animate-glow">
                         <i class="fas fa-folder-open"></i>
                     </div>
                     <h1 class="text-3xl font-bold bg-gradient-to-r from-blue-400 to-orange-400 bg-clip-text text-transparent mb-2">
@@ -128,7 +128,7 @@
                 </div>
 
                 <!-- Form Section -->
-                <div class="px-8 py-8">
+                <div class="px-8 py-8 bg-slate-800/20">
                     <div class="mb-6 p-4 rounded-lg bg-blue-500/10 border border-blue-400/30 text-blue-200 text-sm">
                         <div class="flex items-center">
                             <i class="fas fa-info-circle mr-3 text-blue-400"></i>
@@ -153,7 +153,7 @@
                                     name="username" 
                                     placeholder="Enter your username" 
                                     required
-                                    class="w-full pl-10 pr-4 py-3 bg-white/10 border border-gray-300/30 rounded-lg text-white placeholder-gray-400 backdrop-blur-sm transition-all focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-400/30 focus:bg-white/15"
+                                    class="w-full pl-10 pr-4 py-3 bg-white/10 border border-gray-300/30 rounded-lg text-white placeholder-gray-400 backdrop-blur-sm transition-all duration-200 focus:outline-none focus:border-gray-300/50 focus:ring-1 focus:ring-gray-300/30"
                                 >
                             </div>
                         </div>
@@ -170,12 +170,12 @@
                                     name="password" 
                                     placeholder="Enter your password" 
                                     required
-                                    class="w-full pl-10 pr-12 py-3 bg-white/10 border border-gray-300/30 rounded-lg text-white placeholder-gray-400 backdrop-blur-sm transition-all focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-400/30 focus:bg-white/15"
+                                    class="w-full pl-10 pr-12 py-3 bg-white/10 border border-gray-300/30 rounded-lg text-white placeholder-gray-400 backdrop-blur-sm transition-all duration-200 focus:outline-none focus:border-gray-300/50 focus:ring-1 focus:ring-gray-300/30"
                                 >
                                 <button 
                                     type="button" 
                                     id="togglePassword" 
-                                    class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-blue-400 transition-colors"
+                                    class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-300 transition-colors duration-200"
                                 >
                                     <i class="fas fa-eye text-sm"></i>
                                 </button>
@@ -225,12 +225,13 @@
                 
                 <!-- Copyright -->
                 <p class="text-xs text-gray-500">
-                    © <?php echo date('Y'); ?> Kenya Civil Aviation Authority. All rights reserved.
+                    © 2025 Kenya Civil Aviation Authority. All rights reserved.
                 </p>
             </div>
         </div>
     </div>
 
-    <script src="assets/js/login.js"></script>
+    <script src="assets/js/script.js"></script>
+
 </body>
 </html>
