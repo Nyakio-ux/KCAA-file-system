@@ -1,148 +1,152 @@
- document.addEventListener('DOMContentLoaded', function() {
-    const newPassword = document.getElementById('new_password');
-    const confirmPassword = document.getElementById('confirm_password');
-    const submitBtn = document.getElementById('resetSubmitBtn');
-    const strengthBar = document.getElementById('passwordStrength');
-    const strengthText = document.getElementById('passwordStrengthText');
-    const matchIndicator = document.getElementById('passwordMatchIndicator');
-    const matchIcon = document.getElementById('matchIcon');
-    const matchText = document.getElementById('matchText');
+document.addEventListener('DOMContentLoaded', function() {
+    const newPasswordInput = document.getElementById('new_password');
+    const confirmPasswordInput = document.getElementById('confirm_password');
+    const submitBtn = document.getElementById('resetPasswordBtn');
+    const form = document.getElementById('passwordResetForm');
     
-    // Password requirements elements
-    const reqLength = document.getElementById('req-length');
-    const reqUppercase = document.getElementById('req-uppercase');
-    const reqLowercase = document.getElementById('req-lowercase');
-    const reqNumber = document.getElementById('req-number');
-    const reqSpecial = document.getElementById('req-special');
-    
-    // Password toggle functionality
-    function setupPasswordToggle(toggleId, passwordId) {
-        const toggle = document.getElementById(toggleId);
-        const password = document.getElementById(passwordId);
-        
-        if (toggle && password) {
-            toggle.addEventListener('click', function() {
-                const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
-                password.setAttribute('type', type);
-                
-                const icon = this.querySelector('i');
-                icon.classList.toggle('fa-eye');
-                icon.classList.toggle('fa-eye-slash');
-            });
-        }
-    }
-    
-    setupPasswordToggle('toggleNewPassword', 'new_password');
-    setupPasswordToggle('toggleConfirmPassword', 'confirm_password');
-    
-    // Password strength checker
+    // Password strength checking
     function checkPasswordStrength(password) {
         let score = 0;
         const requirements = {
             length: password.length >= 8,
             uppercase: /[A-Z]/.test(password),
             lowercase: /[a-z]/.test(password),
-            number: /[0-9]/.test(password),
+            number: /\d/.test(password),
             special: /[!@#$%^&*(),.?":{}|<>]/.test(password)
         };
         
         // Update requirement indicators
-        updateRequirement(reqLength, requirements.length);
-        updateRequirement(reqUppercase, requirements.uppercase);
-        updateRequirement(reqLowercase, requirements.lowercase);
-        updateRequirement(reqNumber, requirements.number);
-        updateRequirement(reqSpecial, requirements.special);
-        
-        // Calculate score
-        Object.values(requirements).forEach(req => {
-            if (req) score++;
+        Object.keys(requirements).forEach(req => {
+            const element = document.getElementById(`req-${req}`);
+            if (element) {
+                if (requirements[req]) {
+                    element.className = 'fas fa-check text-green-400 mr-2 w-3';
+                    score++;
+                } else {
+                    element.className = 'fas fa-times text-red-400 mr-2 w-3';
+                }
+            }
         });
         
         // Update strength bar
-        const percentage = (score / 5) * 100;
-        strengthBar.style.width = percentage + '%';
+        const strengthBar = document.getElementById('passwordStrength');
+        const strengthText = document.getElementById('passwordStrengthText');
         
-        // Update color and text
-        if (score < 2) {
-            strengthBar.className = 'h-2 rounded-full bg-red-500 transition-all duration-300';
-            strengthText.textContent = 'Weak';
-            strengthText.className = 'text-xs text-red-400';
-        } else if (score < 4) {
-            strengthBar.className = 'h-2 rounded-full bg-yellow-500 transition-all duration-300';
-            strengthText.textContent = 'Medium';
-            strengthText.className = 'text-xs text-yellow-400';
-        } else {
-            strengthBar.className = 'h-2 rounded-full bg-green-500 transition-all duration-300';
-            strengthText.textContent = 'Strong';
-            strengthText.className = 'text-xs text-green-400';
+        if (strengthBar && strengthText) {
+            const percentage = (score / 5) * 100;
+            strengthBar.style.width = percentage + '%';
+            
+            if (score < 2) {
+                strengthBar.className = 'h-2 rounded-full transition-all duration-300 bg-red-500';
+                strengthText.textContent = 'Weak';
+                strengthText.className = 'text-xs text-red-400';
+            } else if (score < 4) {
+                strengthBar.className = 'h-2 rounded-full transition-all duration-300 bg-yellow-500';
+                strengthText.textContent = 'Fair';
+                strengthText.className = 'text-xs text-yellow-400';
+            } else if (score < 5) {
+                strengthBar.className = 'h-2 rounded-full transition-all duration-300 bg-blue-500';
+                strengthText.textContent = 'Good';
+                strengthText.className = 'text-xs text-blue-400';
+            } else {
+                strengthBar.className = 'h-2 rounded-full transition-all duration-300 bg-green-500';
+                strengthText.textContent = 'Strong';
+                strengthText.className = 'text-xs text-green-400';
+            }
         }
         
         return score === 5;
     }
     
-    function updateRequirement(element, met) {
-        if (met) {
-            element.className = 'fas fa-check text-green-400 mr-2 w-3';
-        } else {
-            element.className = 'fas fa-times text-red-400 mr-2 w-3';
-        }
-    }
-    
-    // Password match checker
+    // Password matching
     function checkPasswordMatch() {
-        const match = newPassword.value === confirmPassword.value && confirmPassword.value !== '';
+        const password = newPasswordInput.value;
+        const confirmPassword = confirmPasswordInput.value;
+        const indicator = document.getElementById('passwordMatchIndicator');
+        const icon = document.getElementById('matchIcon');
+        const text = document.getElementById('matchText');
         
-        if (confirmPassword.value !== '') {
-            matchIndicator.classList.remove('hidden');
+        if (confirmPassword.length > 0) {
+            indicator.classList.remove('hidden');
             
-            if (match) {
-                matchIcon.className = 'fas fa-check text-green-400 mr-2';
-                matchText.textContent = 'Passwords match';
-                matchText.className = 'text-green-400';
+            if (password === confirmPassword) {
+                icon.className = 'fas fa-check text-green-400 mr-2';
+                text.textContent = 'Passwords match';
+                text.className = 'text-green-400';
+                return true;
             } else {
-                matchIcon.className = 'fas fa-times text-red-400 mr-2';
-                matchText.textContent = 'Passwords do not match';
-                matchText.className = 'text-red-400';
+                icon.className = 'fas fa-times text-red-400 mr-2';
+                text.textContent = 'Passwords do not match';
+                text.className = 'text-red-400';
+                return false;
             }
         } else {
-            matchIndicator.classList.add('hidden');
+            indicator.classList.add('hidden');
+            return false;
         }
-        
-        return match;
     }
     
-    // Validate form
-    function validateForm() {
-        const isStrongPassword = checkPasswordStrength(newPassword.value);
-        const passwordsMatch = checkPasswordMatch();
-        const isValid = isStrongPassword && passwordsMatch;
+    // Enable/disable submit button
+    function updateSubmitButton() {
+        const isStrong = checkPasswordStrength(newPasswordInput.value);
+        const isMatching = checkPasswordMatch();
         
-        if (isValid) {
+        if (isStrong && isMatching) {
             submitBtn.disabled = false;
-            submitBtn.className = 'w-full py-3 bg-gradient-to-r from-blue-600 to-orange-600 hover:from-blue-700 hover:to-orange-700 text-white font-semibold rounded-lg transition-all duration-300 transform hover:scale-[1.02] hover:shadow-xl hover:shadow-blue-500/25 focus:outline-none focus:ring-2 focus:ring-blue-400/50';
+            submitBtn.classList.remove('disabled:opacity-50', 'disabled:cursor-not-allowed');
         } else {
             submitBtn.disabled = true;
-            submitBtn.className = 'w-full py-3 bg-gradient-to-r from-gray-600 to-gray-700 text-white font-semibold rounded-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-400/50 disabled:opacity-50 disabled:cursor-not-allowed';
+            submitBtn.classList.add('disabled:opacity-50', 'disabled:cursor-not-allowed');
         }
     }
     
     // Event listeners
-    newPassword.addEventListener('input', validateForm);
-    confirmPassword.addEventListener('input', validateForm);
+    if (newPasswordInput) {
+        newPasswordInput.addEventListener('input', updateSubmitButton);
+    }
+    
+    if (confirmPasswordInput) {
+        confirmPasswordInput.addEventListener('input', updateSubmitButton);
+    }
+    
+    // Password toggle functionality
+    document.querySelectorAll('.password-toggle').forEach(button => {
+        button.addEventListener('click', function() {
+            const targetId = this.getAttribute('data-target');
+            const targetInput = document.getElementById(targetId);
+            const icon = this.querySelector('i');
+            
+            if (targetInput.type === 'password') {
+                targetInput.type = 'text';
+                icon.className = 'fas fa-eye-slash text-sm';
+            } else {
+                targetInput.type = 'password';
+                icon.className = 'fas fa-eye text-sm';
+            }
+        });
+    });
     
     // Form submission
-    document.getElementById('passwordResetForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        if (!submitBtn.disabled) {
-            // Show loading state
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Resetting Password...';
-            submitBtn.disabled = true;
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const originalText = submitBtn.innerHTML;
             
-            // Submit form 
+            // Show loading state
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Updating Password...';
+            
+            // Re-enable after a delay if form submission fails
             setTimeout(() => {
-                this.submit();
-            }, 1000);
-        }
-    });
+                if (submitBtn.disabled && submitBtn.innerHTML.includes('Updating')) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalText;
+                }
+            }, 10000);
+        });
+    }
+    
+    // Initial check
+    if (newPasswordInput && confirmPasswordInput) {
+        updateSubmitButton();
+    }
 });

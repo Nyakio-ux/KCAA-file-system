@@ -1,117 +1,170 @@
 <?php
 /**
- * Password Reset Page - KCAA SmartFiles
- * 
+ * KCAA SmartFiles - Password Reset Page
+ * Secure password reset interface for KCAA file management system
  */
 
-require_once 'components/KCAAuthComponents.php';
-require_once 'includes/database.php';
+require_once 'components/AuthHead.php';
+require_once 'components/AuthLayout.php';
+require_once 'components/FormComponents.php';
+require_once 'components/PasswordComponents.php';
+require_once 'components/AuthFooter.php';
+require_once 'includes/auth.php';
 
 session_start();
 
-// Get token from URL parameter
-$token = isset($_GET['token']) ? trim($_GET['token']) : '';
+$token = $_GET['token'] ?? '';
+$email = $_GET['email'] ?? '';
 
-
-$valid_token = !empty($token); 
-
-// Handle password reset form submission
-if ($_POST && isset($_POST['new_password']) && isset($_POST['confirm_password'])) {
-    $new_password = $_POST['new_password'];
-    $confirm_password = $_POST['confirm_password'];
-    $token = $_POST['token'] ?? '';
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $auth = new Auth();
+    
+    $newPassword = $_POST['new_password'] ?? '';
+    $confirmPassword = $_POST['confirm_password'] ?? '';
     
     // Validate passwords match
-    if ($new_password === $confirm_password) {
-        
-        $success_message = "Your password has been reset successfully!";
-        $redirect_to_login = true;
+    if ($newPassword !== $confirmPassword) {
+        $error_message = "Passwords do not match";
     } else {
-        $error_message = "Passwords do not match. Please try again.";
-    }
-}
-
-// If token is invalid or missing, show error
-if (!$valid_token) {
-    $error_message = "Invalid or expired reset token. Please request a new password reset link.";
-}
-
-KCAAuthComponents::renderHead(
-    "KCAA SmartFiles - Reset Password", 
-    "Create a new password for your KCAA account."
-);
-
-KCAAuthComponents::renderAuthLayout([
-    'icon' => 'lock',
-    'title' => 'Reset Password',
-    'subtitle' => 'KCAA SmartFiles',
-    'description' => 'Create a new secure password',
-    'info_title' => 'Password Reset',
-    'info_text' => 'Enter your new password below'
-]);
-// Show success message if password was reset successfully
-if (isset($success_message)) {
-    echo '<div class="mb-6 p-4 rounded-lg bg-green-500/10 border border-green-400/30 text-green-200 text-sm">';
-    echo '<div class="flex items-center">';
-    echo '<i class="fas fa-check-circle mr-3 text-green-400"></i>';
-    echo '<div>';
-    echo '<p class="font-medium">Success!</p>';
-    echo '<p class="text-xs mt-1 text-green-300">' . htmlspecialchars($success_message) . '</p>';
-    echo '</div>';
-    echo '</div>';
-    echo '</div>';
-    
-    // Show redirect message and auto-redirect 
-    if (isset($redirect_to_login)) {
-        echo '<div class="mb-6 p-4 rounded-lg bg-blue-500/10 border border-blue-400/30 text-blue-200 text-sm">';
-        echo '<div class="flex items-center">';
-        echo '<i class="fas fa-info-circle mr-3 text-blue-400"></i>';
-        echo '<div>';
-        echo '<p class="font-medium">Redirecting to login...</p>';
-        echo '<p class="text-xs mt-1 text-blue-300">You will be redirected to the login page in <span id="countdown">4</span> seconds.</p>';
-        echo '</div>';
-        echo '</div>';
-        echo '</div>';
+        $result = $auth->resetPassword($token, $email, $newPassword);
         
-        echo '<script>';
-        echo 'let countdown = 4;';
-        echo 'const countdownElement = document.getElementById("countdown");';
-        echo 'const timer = setInterval(() => {';
-        echo '    countdown--;';
-        echo '    countdownElement.textContent = countdown;';
-        echo '    if (countdown <= 0) {';
-        echo '        clearInterval(timer);';
-        echo '        window.location.href = "login";';
-        echo '    }';
-        echo '}, 1000);';
-        echo '</script>';
+        if ($result['success']) {
+            $success_message = $result['message'];
+        } else {
+            $error_message = $result['message'];
+        }
     }
 }
 
-// Show error message if there's an error
-if (isset($error_message)) {
-    echo '<div class="mb-6 p-4 rounded-lg bg-red-500/10 border border-red-400/30 text-red-200 text-sm">';
-    echo '<div class="flex items-center">';
-    echo '<i class="fas fa-exclamation-triangle mr-3 text-red-400"></i>';
-    echo '<div>';
-    echo '<p class="font-medium">Error!</p>';
-    echo '<p class="text-xs mt-1 text-red-300">' . htmlspecialchars($error_message) . '</p>';
-    echo '</div>';
-    echo '</div>';
-    echo '</div>';
-}
+AuthHead::render("KCAA SmartFiles - Reset Password", "Create a new password for your KCAA account");
 
-// Only show the form if token is valid and password hasn't been reset yet if not do not show the form inputs
-if ($valid_token && !isset($success_message)) {
-    KCAAuthComponents::renderPasswordResetForm($_SERVER['PHP_SELF'], 'POST', $token);
-} else if (!$valid_token) {
-    // Show option to request new reset link
-    echo '<div class="text-center space-y-4">';
-    echo '<p class="text-gray-300 text-sm">Need a new reset link?</p>';
-    echo '<a href="forgotpassword" class="inline-block px-6 py-3 bg-gradient-to-r from-blue-600 to-orange-600 hover:from-blue-700 hover:to-orange-700 text-white font-semibold rounded-lg transition-all duration-300 transform hover:scale-[1.02] hover:shadow-xl hover:shadow-blue-500/25 focus:outline-none focus:ring-2 focus:ring-blue-400/50">';
-    echo '<i class="fas fa-envelope mr-2"></i>';
-    echo 'Request New Reset Link';
-    echo '</a>';
-    echo '</div>';
-}
-KCAAuthComponents::renderFooter();
+AuthLayout::render([
+    'icon' => 'lock',
+    'title' => 'KCAA SmartFiles',
+    'subtitle' => 'Create New Password',
+    'description' => 'Kenya Civil Aviation Authority',
+    'info_title' => 'Password Reset',
+    'info_text' => 'Choose a strong password to secure your account'
+]);
+
+// Handle success message
+if (isset($success_message)): ?>
+    <div class="mb-4 p-4 bg-green-500/10 border border-green-400/30 rounded-lg text-green-200 text-sm">
+        <div class="flex items-start">
+            <i class="fas fa-check-circle mr-3 text-green-400 mt-0.5"></i>
+            <div>
+                <div class="font-medium mb-1">Password Successfully Reset</div>
+                <div><?php echo htmlspecialchars($success_message); ?></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="mt-6 text-center">
+        <?php
+            FormComponents::renderLink([
+                'href' => 'login.php',
+                'text' => 'Continue to Login',
+                'classes' => 'inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-orange-600 hover:from-blue-700 hover:to-orange-700 text-white font-semibold rounded-lg transition-all duration-300 transform hover:scale-[1.02] hover:shadow-xl hover:shadow-blue-500/25 no-underline'
+            ]);
+        ?>
+    </div>
+<?php else: ?>
+
+<?php if (isset($error_message)): ?>
+    <div class="mb-4 p-4 bg-red-500/10 border border-red-400/30 rounded-lg text-red-200 text-sm">
+        <div class="flex items-center">
+            <i class="fas fa-exclamation-triangle mr-3 text-red-400"></i>
+            <span><?php echo htmlspecialchars($error_message); ?></span>
+        </div>
+    </div>
+<?php endif; ?>
+
+<form id="passwordResetForm" action="" method="POST" class="space-y-6">
+    <input type="hidden" name="token" value="<?php echo htmlspecialchars($token); ?>">
+    <input type="hidden" name="email" value="<?php echo htmlspecialchars($email); ?>">
+    
+    <?php
+        FormComponents::renderInputField([
+            'type' => 'password',
+            'name' => 'new_password',
+            'id' => 'new_password',
+            'label' => 'New Password',
+            'placeholder' => 'Enter your new password',
+            'icon' => 'lock',
+            'required' => true,
+            'show_toggle' => true,
+            'autocomplete' => 'new-password',
+            'minlength' => 8
+        ]);
+        
+        PasswordComponents::renderPasswordStrengthIndicator('new_password');
+    ?>
+
+    <?php
+        FormComponents::renderInputField([
+            'type' => 'password',
+            'name' => 'confirm_password',
+            'id' => 'confirm_password',
+            'label' => 'Confirm New Password',
+            'placeholder' => 'Confirm your new password',
+            'icon' => 'lock',
+            'required' => true,
+            'show_toggle' => true,
+            'autocomplete' => 'new-password',
+            'minlength' => 8
+        ]);
+        
+        PasswordComponents::renderPasswordMatchIndicator();
+    ?>
+
+    <?php
+        PasswordComponents::renderPasswordRequirements();
+    ?>
+    
+    <?php
+        FormComponents::renderSubmitButton([
+            'text' => 'Update Password',
+            'icon' => 'check',
+            'id' => 'resetPasswordBtn',
+            'disabled' => true
+        ]);
+    ?>
+</form>
+
+<?php endif; ?>
+
+<div class="mt-6 text-center">
+    <div class="relative">
+        <div class="absolute inset-0 flex items-center">
+            <div class="w-full border-t border-gray-600"></div>
+        </div>
+        <div class="relative flex justify-center text-sm">
+            <span class="px-2 bg-slate-800 text-gray-400">Need help?</span>
+        </div>
+    </div>
+    
+    <div class="mt-4 space-y-2">
+        <?php
+            FormComponents::renderLink([
+                'href' => 'login.php',
+                'text' => 'Back to Login',
+                'classes' => 'inline-flex items-center text-orange-400 hover:text-orange-300 hover:underline transition-colors text-sm mr-4'
+            ]);
+            
+            FormComponents::renderLink([
+                'href' => 'forgotpassword.php',
+                'text' => 'Request New Reset Link',
+                'classes' => 'inline-flex items-center text-gray-400 hover:text-gray-300 hover:underline transition-colors text-sm'
+            ]);
+        ?>
+    </div>
+    
+    <div class="mt-4 text-sm text-gray-400">
+        For technical support, contact your system administrator
+    </div>
+</div>
+<script src="assets/js/resetpassword.js"></script>
+
+<?php
+    AuthFooter::render();
+?>
