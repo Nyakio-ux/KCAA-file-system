@@ -241,7 +241,6 @@ class Auth {
      * Get current user data
      */
     public function getCurrentUser() {
-        session_start();
         
         if (isset($_SESSION['user_id'])) {
             return $this->getUserById($_SESSION['user_id']);
@@ -552,4 +551,5 @@ class Auth {
             error_log("Password hash update error: " . $e->getMessage());
         }
     }
+
 }
