@@ -9,7 +9,7 @@ session_start();
 
 // Check if user is already logged in 
 if (isset($_SESSION['user_id']) && $_SESSION['logged_in'] === true) {
-    header('Location: dashboard.php');
+    header('Location: home.php');
     exit();
 }
 

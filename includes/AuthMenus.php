@@ -106,6 +106,12 @@ class AuthMenus {
                 'icon' => 'fas fa-bell',
                 'url' => 'notifications.php',
                 'permission' => true
+            ],
+            'logout' => [
+                'title' => 'Logout',
+                'icon' => 'fas fa-sign-out-alt',
+                'url' => 'logout.php',
+                'permission' => true
             ]
         ];
     }

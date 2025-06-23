@@ -11,13 +11,13 @@ $profileData = $userActions->getUserById($profileUserId);
 
 // Check if user exists
 if (!$profileData) {
-    header('Location: dashboard.php');
+    header('Location: home.php');
     exit;
 }
 
 // Check if current user has permission to view this profile
 if ($currentUser['role_id'] != 1 && $currentUser['user_id'] != $profileUserId) {
-    header('Location: dashboard.php');
+    header('Location: home.php');
     exit;
 }
 ?>
