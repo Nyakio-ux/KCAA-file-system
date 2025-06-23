@@ -1,6 +1,6 @@
 <?php
 $pageTitle = "My Profile";
-require_once 'header.php';
+require_once 'userComponents/header.php'; // Correct path to header.php
 
 require_once 'users.php';
 $userActions = new UserActions();
@@ -30,7 +30,7 @@ if ($currentUser['role_id'] != 1 && $currentUser['user_id'] != $profileUserId) {
                 <div class="profile-image mb-3">
                     <img src="assets/images/default-avatar.png" class="rounded-circle" width="150" height="150" alt="Profile Image">
                 </div>
-                <h4><?php echo htmlspecialchars($profileData['first_name'] . ' ' . htmlspecialchars($profileData['last_name']); ?></h4>
+                <h4><?php echo htmlspecialchars($profileData['first_name'] . ' ' . $profileData['last_name']); ?></h4>
                 <p class="text-muted">@<?php echo htmlspecialchars($profileData['username']); ?></p>
                 
                 <div class="d-flex justify-content-center mb-3">
