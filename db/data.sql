@@ -270,7 +270,7 @@ INSERT INTO user_categories (category_name, description, can_upload_files, can_s
 ('Senior User', 'Users with additional file sharing capabilities', TRUE, TRUE, FALSE, TRUE, 1),
 ('Finance Team', 'Users with access to financial documents', TRUE, FALSE, FALSE, TRUE, 1),
 ('HR Team', 'Human resources team members', TRUE, FALSE, FALSE, TRUE, 1),
-('IT Team', 'Information technology team members', TRUE, TRUE, FALSE, TRUE, 1);
+('IcT Team', 'Information technology team members', TRUE, TRUE, FALSE, TRUE, 1);
 
 -- 13. User categories table - Admin can add custom user categories
 CREATE TABLE user_categories (

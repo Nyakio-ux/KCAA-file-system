@@ -1,18 +1,47 @@
 -- 1. Insert the users
 INSERT INTO users (username, email, password_hash, first_name, last_name, phone, user_category_id)
 VALUES 
-    ('admin1', 'livingstoneapeli@gmail.com', '$2y$10$VahEoKuoUZXlOan90ADVyeSBi1wkOqDWzwljZQuWDlFP.jASEqjCO', 'Livingstone', 'Apeli', '0703416091', 
+    ('admin1', 'nyawinnies@gmail.com', '$2y$10$VahEoKuoUZXlOan90ADVyeSBi1wkOqDWzwljZQuWDlFP.jASEqjCO', 'Winnie ', 'Nyakio', '0703416091', 
      (SELECT category_id FROM user_categories WHERE category_name = 'Standard User')),
      
-    ('depthead1', 'tonnytrevix@gmail.com', '$2y$10$VahEoKuoUZXlOan90ADVyeSBi1wkOqDWzwljZQuWDlFP.jASEqjCO', 'Tonny', 'Apeli', '0754497441', 
+    ('depthead1', 'chepkemoicynthia05@gmail.com', '$2y$10$VahEoKuoUZXlOan90ADVyeSBi1wkOqDWzwljZQuWDlFP.jASEqjCO', 'Cynthia', 'Memo', '0754497441', 
      (SELECT category_id FROM user_categories WHERE category_name = 'Senior User')),
      
-    ('user1', 'livingstoneapeli@stepakash.com', '$2y$10$VahEoKuoUZXlOan90ADVyeSBi1wkOqDWzwljZQuWDlFP.jASEqjCO', 'Ivy', 'Williams', '0703416099', 
+    ('user1', 'cynthiakoech005@gmail.com', '$2y$10$VahEoKuoUZXlOan90ADVyeSBi1wkOqDWzwljZQuWDlFP.jASEqjCO', 'Cyndy', 'Williams', '0703416099', 
      (SELECT category_id FROM user_categories WHERE category_name = 'Standard User'));
 
 -- 2. Insert a department if none exists
 INSERT IGNORE INTO departments (department_name, department_code, description)
-VALUES ('IT Department', 'IT', 'Information Technology Department');
+VALUES -- ...existing code...
+
+-- Add multiple departments
+
+('ICT Department', 'ICT', 'Information Communication Technology Department'),
+('Planning', 'PLN', 'Planning Department'),
+('Procurement', 'PROC', 'Procurement Department'),
+('Registry', 'REG', 'Registry Department'),
+('Finance', 'FIN', 'Finance Department'),
+('CCD', 'CCD', 'CCD Department'),
+('Audit', 'AUD', 'Audit Department'),
+('Airworthiness', 'AIRW', 'Airworthiness Department'),
+('Legal', 'LEG', 'Legal Department'),
+('Director Ans', 'DIRANS', 'Director Ans Department'),
+('Director Cs', 'DIRCS', 'Director Cs Department'),
+('Corporations SEC', 'CORSEC', 'Corporations SEC Department'),
+('Examination', 'EXAM', 'Examination Department'),
+('Licensing', 'LIC', 'Licensing Department'),
+('Human Resource', 'HR', 'Human Resource Department'),
+('Technical Library', 'LIB', 'Technical Library Department'),
+('Air Transport', 'ATR', 'Air Transport Department'),
+('Aviation SEC', 'AVSEC', 'Aviation Security Department'),
+('Ammel', 'AMMEL', 'Ammel Department'),
+('Flight Operations', 'FOPS', 'Flight Operations Department'),
+('Director General', 'DG', 'Director General Department'),
+('Director ASSR', 'DIRASSR', 'Director ASSR Department'),
+('Chairman', 'CHAIR', 'Chairman Department'),
+('BOD', 'BOD', 'Board of Directors Department');
+-- ...existing code...
+
 
 -- 3. Assign roles to users
 -- Admin role

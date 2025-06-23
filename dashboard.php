@@ -3,7 +3,7 @@
 $host = 'localhost';
 $user = 'root';
 $pass = '';
-$dbname = 'file_movement_db';
+$dbname = 'kcaa';
 
 $conn = new mysqli($host, $user, $pass, $dbname);
 if ($conn->connect_error) {
@@ -16,7 +16,7 @@ if ($conn->connect_error) {
 include 'includes/db.php';
 session_start();
 if (!isset($_SESSION['fmsuid'])) {
-    header("Location: login.php");
+    header("Location: home.php");
     exit();
 }
 
@@ -41,7 +41,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 }
 ?>
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -72,3 +71,5 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     </form>
 </body>
 </html>
+
+
