@@ -3,7 +3,7 @@
 $host = 'localhost';
 $username = 'root';
 $password = '';
-$database = 'kcaa'; // Replace with your admin database name
+$database = 'kcaa'; 
 
 $conn = new mysqli($host, $username, $password, $database);
 
@@ -14,14 +14,13 @@ if ($conn->connect_error) {
 
 // Fetch departments from the database
 $departments = [];
-$result = $conn->query("SELECT name FROM departments"); // Replace 'departments' with your table name
+$result = $conn->query("SELECT department_name FROM departments");
 if ($result && $result->num_rows > 0) {
     while ($row = $result->fetch_assoc()) {
-        $departments[] = $row['name'];
+        $departments[] = $row['department_name'];
     }
 }
-
-// Check if the form was submitted
+// If no departments found, use a default list
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $uploadDir = 'uploads/'; // Directory to save uploaded files
     $uploadFile = isset($_FILES['file']) ? $uploadDir . basename($_FILES['file']['name']) : null;
@@ -33,38 +32,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         mkdir($uploadDir, 0777, true);
     }
 
-    // Validate file upload if a file is provided
-    if (isset($_FILES['file']) && $_FILES['file']['size'] > 0) {
-        if ($_FILES['file']['size'] > $maxFileSize) {
-            echo "<p class='error'>Error: File size exceeds the maximum limit of 2 MB.</p>";
-            exit;
-        }
+    // Validate file upload
+    if (!isset($_FILES['file']) || $_FILES['file']['size'] === 0) {
+        echo "<p class='error'>Error: No file uploaded.</p>";
+        die();
+    }
 
-        if (!in_array($_FILES['file']['type'], $allowedTypes)) {
-            echo "<p class='error'>Error: Invalid file type. Only JPEG, PNG, and PDF files are allowed.</p>";
-            exit;
-        }
+    if ($_FILES['file']['size'] > $maxFileSize) {
+        echo "<p class='error'>Error: File size exceeds the maximum limit of 2 MB.</p>";
+        die();
+    }
 
-        if (!move_uploaded_file($_FILES['file']['tmp_name'], $uploadFile)) {
-            echo "<p class='error'>Error: Failed to upload file.</p>";
-            exit;
-        }
+    if (!in_array($_FILES['file']['type'], $allowedTypes)) {
+        echo "<p class='error'>Error: Invalid file type. Only JPEG, PNG, and PDF files are allowed.</p>";
+        die();
+    }
+
+    if (!move_uploaded_file($_FILES['file']['tmp_name'], $uploadFile)) {
+        echo "<p class='error'>Error: Failed to upload file.</p>";
+        die();
     }
 
     // Collect metadata from the form
-    $fileName = htmlspecialchars($_POST['physical_file_name'] ?? ($_FILES['file']['name'] ?? ''));
+    $fileName = htmlspecialchars($_POST['file_name'] ?? ($_FILES['file']['name'] ?? ''));
+    $filePath = $uploadFile; // Path where the file is saved
+    $fileSize = $_FILES['file']['size']; // File size in bytes
+    $fileType = $_FILES['file']['type']; // MIME type of the file
     $department = htmlspecialchars($_POST['department']);
     $originator = htmlspecialchars($_POST['originator']);
     $destination = htmlspecialchars($_POST['destination']);
     $receiver = htmlspecialchars($_POST['receiver']);
+    $dateOfOrigination = htmlspecialchars($_POST['date_of_origination']);
+    $comments = htmlspecialchars($_POST['comments']);
     $dateTime = date('Y-m-d H:i:s'); // Current date and time
 
     // Save metadata to the database
     $stmt = $conn->prepare("
-        INSERT INTO uploaded_files (file_name, department, originator, destination, receiver, uploaded_at) 
-        VALUES (?, ?, ?, ?, ?, ?)
+        INSERT INTO uploaded_files (file_name, file_path, file_size, file_type, department, originator, destination, receiver, date_of_origination, comments, uploaded_at) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ");
-    $stmt->bind_param("ssssss", $fileName, $department, $originator, $destination, $receiver, $dateTime);
+    $stmt->bind_param("sssssssssss", $fileName, $filePath, $fileSize, $fileType, $department, $originator, $destination, $receiver, $dateOfOrigination, $comments, $dateTime);
 
     if ($stmt->execute()) {
         echo "<p class='success'>File uploaded successfully!</p>";
@@ -73,9 +80,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     $stmt->close();
+    $conn->close();
+    die(); // Stop execution after successful upload
 }
 
-$conn->close();
 ?>
 
 <!DOCTYPE html>
@@ -125,18 +133,6 @@ $conn->close();
             box-sizing: border-box;
         }
 
-        input[type="date"] {
-            background-color: #f9f9f9;
-            color: #333;
-            font-size: 14px;
-        }
-
-        input[type="date"]:focus {
-            border-color: #007BFF;
-            outline: none;
-            box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
-        }
-
         button {
             display: block;
             width: 100%;
@@ -156,12 +152,9 @@ $conn->close();
 </head>
 <body>
     <h1>Upload File</h1>
-    <form action="upload.php" method="post" enctype="multipart/form-data">
-        <label for="file">Choose a file (optional):</label>
-        <input type="file" name="file" id="file"><br><br>
-
-        <label for="physical_file_name">File Name (for physical file movement):</label>
-        <input type="text" name="physical_file_name" id="physical_file_name"><br><br>
+    <form id="uploadForm" method="post" enctype="multipart/form-data">
+        <label for="file_name">File Name :</label>
+        <input type="text" name="file_name" id="file_name"><br><br>
 
         <label for="department">Origin Office:</label>
         <select name="department" id="department" required>
@@ -185,10 +178,20 @@ $conn->close();
         <label for="receiver">Receiver:</label>
         <input type="text" name="receiver" id="receiver" required><br><br>
 
+        <label for="comments">Comments:</label>
+        <select name="comments" id="comments" required>
+            <option value="-">-</option>
+            <option value="Received">Received</option>
+            <option value="Approved">Approved</option>
+        </select><br><br>
+
         <label for="date_of_origination">Date of Origination:</label>
         <input type="date" name="date_of_origination" id="date_of_origination" required><br><br>
         
         <button type="submit">Upload</button>
     </form>
-</body>
-</html>
+    <div id="message" style="margin-top: 20px; color: #333;"></div>
+    </body>
+</html> 
+
+    

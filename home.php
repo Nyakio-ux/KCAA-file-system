@@ -551,22 +551,22 @@ $dashboardData = $dashboard->getDashboardData($currentUser['user_id']);
                                         <div class="mb-4">
                                             <h4 class="text-sm font-medium text-gray-500 dark:text-gray-400">Department Name</h4>
                                            <p class="mt-1 text-gray-800 dark:text-white">
-    <?php echo is_array($dashboardData['department_info']) ? htmlspecialchars($dashboardData['department_info']['department_name']) : 'N/A'; ?>
-</p>
+                                                <?php echo is_array($dashboardData['department_info']) ? htmlspecialchars($dashboardData['department_info']['department_name']) : 'N/A'; ?>
+                                            </p>
                                         </div>
                                         <div class="mb-4">
                                             <h4 class="text-sm font-medium text-gray-500 dark:text-gray-400">Description</h4>
                                             <p class="mt-1 text-gray-800 dark:text-white">
-    <?php echo is_array($dashboardData['department_info']) ? htmlspecialchars($dashboardData['department_info']['department_name']) : 'N/A'; ?>
-</p>
+                                                <?php echo is_array($dashboardData['department_info']) ? htmlspecialchars($dashboardData['department_info']['department_name']) : 'N/A'; ?>
+                                            </p>
                                         </div>
                                     </div>
                                     <div>
                                         <div class="mb-4">
                                             <h4 class="text-sm font-medium text-gray-500 dark:text-gray-400">Head</h4>
                                             <p class="mt-1 text-gray-800 dark:text-white">
-    <?php echo is_array($dashboardData['department_info']) ? htmlspecialchars($dashboardData['department_info']['department_name']) : 'N/A'; ?>
-</p>
+                                            <?php echo is_array($dashboardData['department_info']) ? htmlspecialchars($dashboardData['department_info']['department_name']) : 'N/A'; ?>
+                                        </p>
                                         </div>
                                     </div>
                                 </div>

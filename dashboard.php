@@ -53,7 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         <input type="text" name="file_description" required><br>
 
         <label>Type:</label>
-        <input type="text" name="file_type" required><br>
+        <input type="text" name="afile_type" required><br>
 
         <label>Receiver:</label>
         <input type="number" name="receiver_id" required><br>
