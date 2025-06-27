@@ -33,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             VALUES (?, ?, ?, ?, ?, ?, ?)";
 
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param("ssiiiis", $desc, $type, $originator, $receiver, $orig_office, $recv_office, $date_orig);
+    $stmt->bind_param("ssiiiis", $name, $type, $originator, $receiver, $orig_office, $recv_office, $date_orig);
     if ($stmt->execute()) {
         echo "<p>File added successfully!</p>";
     } else {
@@ -49,11 +49,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 <body>
     <h2>Add New File Movement</h2>
     <form method="POST">
-        <label>Description:</label>
-        <input type="text" name="file_description" required><br>
+        <label>Name</label>
+        <input type="text" name="file_name" required><br>
 
-        <label>Type:</label>
-        <input type="text" name="afile_type" required><br>
 
         <label>Receiver:</label>
         <input type="number" name="receiver_id" required><br>

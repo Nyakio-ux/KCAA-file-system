@@ -3,7 +3,7 @@
 $host = 'localhost';
 $username = 'root';
 $password = '';
-$database = 'kcaa'; 
+$database = 'kcaa';
 
 $conn = new mysqli($host, $username, $password, $database);
 
@@ -20,31 +20,18 @@ if ($result && $result->num_rows > 0) {
         $departments[] = $row['department_name'];
     }
 }
-// If no departments found, use a default list
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $uploadDir = 'uploads/'; // Directory to save uploaded files
-    $uploadFile = isset($_FILES['file']) ? $uploadDir . basename($_FILES['file']['name']) : null;
-    $maxFileSize = 2 * 1024 * 1024; // Maximum file size (2 MB)
-    $allowedTypes = ['image/jpeg', 'image/png', 'application/pdf']; // Allowed MIME types
 
-    // Create the upload directory if it doesn't exist
+// Handle file upload
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $uploadDir = 'uploads/';
+    $uploadFile = isset($_FILES['file']) ? $uploadDir . basename($_FILES['file']['name']) : null;
+
     if (!is_dir($uploadDir)) {
         mkdir($uploadDir, 0777, true);
     }
 
-    // Validate file upload
     if (!isset($_FILES['file']) || $_FILES['file']['size'] === 0) {
         echo "<p class='error'>Error: No file uploaded.</p>";
-        die();
-    }
-
-    if ($_FILES['file']['size'] > $maxFileSize) {
-        echo "<p class='error'>Error: File size exceeds the maximum limit of 2 MB.</p>";
-        die();
-    }
-
-    if (!in_array($_FILES['file']['type'], $allowedTypes)) {
-        echo "<p class='error'>Error: Invalid file type. Only JPEG, PNG, and PDF files are allowed.</p>";
         die();
     }
 
@@ -53,145 +40,200 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         die();
     }
 
-    // Collect metadata from the form
     $fileName = htmlspecialchars($_POST['file_name'] ?? ($_FILES['file']['name'] ?? ''));
-    $filePath = $uploadFile; // Path where the file is saved
-    $fileSize = $_FILES['file']['size']; // File size in bytes
-    $fileType = $_FILES['file']['type']; // MIME type of the file
+    $referenceNo = htmlspecialchars($_POST['reference_no']);
+    $filePath = $uploadFile;
     $department = htmlspecialchars($_POST['department']);
     $originator = htmlspecialchars($_POST['originator']);
     $destination = htmlspecialchars($_POST['destination']);
     $receiver = htmlspecialchars($_POST['receiver']);
     $dateOfOrigination = htmlspecialchars($_POST['date_of_origination']);
     $comments = htmlspecialchars($_POST['comments']);
-    $dateTime = date('Y-m-d H:i:s'); // Current date and time
+    $dateTime = date('Y-m-d H:i:s');
 
-    // Save metadata to the database
     $stmt = $conn->prepare("
-        INSERT INTO uploaded_files (file_name, file_path, file_size, file_type, department, originator, destination, receiver, date_of_origination, comments, uploaded_at) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO files (file_name, reference_no, file_path, department, originator, destination, receiver, date_of_origination, comments, uploaded_at) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ");
-    $stmt->bind_param("sssssssssss", $fileName, $filePath, $fileSize, $fileType, $department, $originator, $destination, $receiver, $dateOfOrigination, $comments, $dateTime);
+    $stmt->bind_param("ssssssssss", $fileName, $referenceNo, $filePath, $department, $originator, $destination, $receiver, $dateOfOrigination, $comments, $dateTime);
 
     if ($stmt->execute()) {
-        echo "<p class='success'>File uploaded successfully!</p>";
+        echo "<p class='success'>File uploaded successfully.</p>";
     } else {
         echo "<p class='error'>Error saving file metadata: " . $stmt->error . "</p>";
     }
 
     $stmt->close();
     $conn->close();
-    die(); // Stop execution after successful upload
+    die();
 }
-
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Upload File</title>
+    <title>File Upload</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f9;
-            margin: 0;
-            padding: 20px;
-        }
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #1a202c;
+        margin: 0;
+        padding: 0;
+    }
 
-        h1 {
-            text-align: center;
-            color: #333;
-        }
+    .main-content {
+        padding: 40px;
+        color: #fff;
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
 
-        form {
-            max-width: 500px;
-            margin: 0 auto;
-            padding: 20px;
-            background: #fff;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        }
+    form#uploadForm {
+        background-color: #2d3748;
+        padding: 30px;
+        border-radius: 10px;
+        width: 100%;
+        max-width: 600px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.4);
+    }
 
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: bold;
-            color: #555;
-        }
+    form#uploadForm label {
+        display: block;
+        margin-top: 15px;
+        color: #cbd5e0;
+        font-weight: bold;
+    }
 
-        input[type="text"],
-        input[type="file"],
-        input[type="date"],
-        select {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 15px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
+    form#uploadForm input,
+    form#uploadForm select {
+        width: 100%;
+        padding: 10px;
+        margin-top: 5px;
+        border: 1px solid #4a5568;
+        border-radius: 5px;
+        background-color: #1a202c;
+        color: #fff;
+    }
 
-        button {
-            display: block;
-            width: 100%;
-            padding: 10px;
-            background-color: #007BFF;
-            color: #fff;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-        }
+    form#uploadForm button {
+        margin-top: 20px;
+        padding: 12px;
+        background-color: #3182ce;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        font-size: 16px;
+        cursor: pointer;
+    }
 
-        button:hover {
-            background-color: #0056b3;
-        }
-    </style>
+    form#uploadForm button:hover {
+        background-color: #2b6cb0;
+    }
+
+    #message {
+        margin-top: 20px;
+        text-align: center;
+        font-size: 16px;
+    }
+
+    #message.success {
+        color: #38a169;
+    }
+
+    #message.error {
+        color: #e53e3e;
+    }
+</style>
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
 </head>
 <body>
-    <h1>Upload File</h1>
-    <form id="uploadForm" method="post" enctype="multipart/form-data">
-        <label for="file_name">File Name :</label>
-        <input type="text" name="file_name" id="file_name"><br><br>
-
-        <label for="department">Origin Office:</label>
-        <select name="department" id="department" required>
-            <option value="">Select a department</option>
-            <?php foreach ($departments as $department): ?>
-                <option value="<?php echo htmlspecialchars($department); ?>"><?php echo htmlspecialchars($department); ?></option>
-            <?php endforeach; ?>
-        </select><br><br>
-
-        <label for="originator">Originator:</label>
-        <input type="text" name="originator" id="originator" required><br><br>
-
-        <label for="destination">Destination Office:</label>
-        <select name="destination" id="destination" required>
-            <option value="">Select a destination</option>
-            <?php foreach ($departments as $department): ?>
-                <option value="<?php echo htmlspecialchars($department); ?>"><?php echo htmlspecialchars($department); ?></option>
-            <?php endforeach; ?>
-        </select><br><br>
-
-        <label for="receiver">Receiver:</label>
-        <input type="text" name="receiver" id="receiver" required><br><br>
-
-        <label for="comments">Comments:</label>
-        <select name="comments" id="comments" required>
-            <option value="-">-</option>
-            <option value="Received">Received</option>
-            <option value="Approved">Approved</option>
-        </select><br><br>
-
-        <label for="date_of_origination">Date of Origination:</label>
-        <input type="date" name="date_of_origination" id="date_of_origination" required><br><br>
-        
-        <button type="submit">Upload</button>
-    </form>
-    <div id="message" style="margin-top: 20px; color: #333;"></div>
-    </body>
-</html> 
-
     
+
+    <div class="main-content" id="mainContent">
+        <form id="uploadForm" method="post" enctype="multipart/form-data">
+            <h2 style="color: #fff; text-align: center; margin-bottom: 20px;">Upload File</h2>
+            
+            <!-- File Name -->
+            <label for="file_name">File Name:</label>
+            <input type="text" name="file_name" id="file_name" placeholder="Enter file name" required>
+            
+            <!-- Reference Number -->
+            <label for="reference_no">Reference Number:</label>
+            <input type="text" name="reference_no" id="reference_no" placeholder="Enter reference number" required>
+            
+            <!-- Origin Office -->
+            <label for="department">Origin Office:</label>
+            <select name="department" id="department" required>
+                <option value="">Select a department</option>
+                <?php foreach ($departments as $department): ?>
+                    <option value="<?php echo htmlspecialchars($department); ?>"><?php echo htmlspecialchars($department); ?></option>
+                <?php endforeach; ?>
+            </select>
+            
+            <!-- Originator -->
+            <label for="originator">Originator:</label>
+            <input type="text" name="originator" id="originator" placeholder="Enter originator name" required>
+            
+            <!-- Destination Office -->
+            <label for="destination">Destination Office:</label>
+            <select name="destination" id="destination" required>
+                <option value="">Select a destination</option>
+                <?php foreach ($departments as $department): ?>
+                    <option value="<?php echo htmlspecialchars($department); ?>"><?php echo htmlspecialchars($department); ?></option>
+                <?php endforeach; ?>
+            </select>
+            
+            <!-- Receiver -->
+            <label for="receiver">Receiver:</label>
+            <input type="text" name="receiver" id="receiver" placeholder="Enter receiver name" required>
+            
+            <!-- Comments -->
+            <label for="comments">Comments:</label>
+            <select name="comments" id="comments" required>
+                <option value="-">-</option>
+                <option value="Sent">Sent</option>
+                <option value="Received">Received</option>
+                <option value="Approved">Approved</option>
+            </select>
+            
+            <!-- Date of Origination -->
+            <label for="date_of_origination">Date of Origination:</label>
+            <input type="date" name="date_of_origination" id="date_of_origination" required>
+            
+            
+            <!-- Submit Button -->
+            <button type="submit">Upload</button>
+        </form>
+        <div id="message"></div>
+    </div>
+
+    <script>
+        function loadContent(page) {
+            fetch(page)
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById('mainContent').innerHTML = html;
+                })
+                .catch(error => {
+                    document.getElementById('mainContent').innerHTML = "<p>Error loading content.</p>";
+                });
+        }
+
+        document.getElementById("uploadForm")?.addEventListener("submit", function (event) {
+            event.preventDefault();
+            const formData = new FormData(this);
+            fetch("", { method: "POST", body: formData })
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById("message").innerHTML = data;
+                    this.reset();
+                })
+                .catch(error => {
+                    document.getElementById("message").innerHTML = "<p class='error'>An error occurred. Please try again.</p>";
+                });
+        });
+    </script>
+</body>
+</html>
