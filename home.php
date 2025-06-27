@@ -17,6 +17,9 @@ $dashboardData = $dashboard->getDashboardData($currentUser['user_id']);
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
     
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -649,7 +652,119 @@ $dashboardData = $dashboard->getDashboardData($currentUser['user_id']);
             </main>
         </div>
     </div>
-    
+    <div class="modal fade" id="uploadModal" tabindex="-1" role="dialog" aria-labelledby="uploadModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content" style="background-color: #2d3748; color: #fff;">
+            <div class="modal-header" style="border-bottom: 1px solid #4a5568;">
+                <h5 class="modal-title" id="uploadModalLabel" style="color: #fff;">
+                    <i class="fas fa-upload"></i> Upload File
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color: #fff;">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="uploadForm" method="post" enctype="multipart/form-data">
+                    <!-- File Name -->
+                    <div class="form-group">
+                        <label for="file_name" style="color: #cbd5e0; font-weight: bold;">File Name:</label>
+                        <input type="text" name="file_name" id="file_name" class="form-control" 
+                               style="background-color: #1a202c; border: 1px solid #4a5568; color: #fff;" 
+                               placeholder="Enter file name" required>
+                    </div>
+                    
+                    <!-- Reference Number -->
+                    <div class="form-group">
+                        <label for="reference_no" style="color: #cbd5e0; font-weight: bold;">Reference Number:</label>
+                        <input type="text" name="reference_no" id="reference_no" class="form-control"
+                               style="background-color: #1a202c; border: 1px solid #4a5568; color: #fff;" 
+                               placeholder="Enter reference number" required>
+                    </div>
+                    
+                    <!-- File Upload -->
+                    <div class="form-group">
+                        <label for="file" style="color: #cbd5e0; font-weight: bold;">Select File:</label>
+                        <div class="custom-file">
+                            <input type="file" name="file" id="file" class="custom-file-input" 
+                                   style="background-color: #1a202c; color: #fff;" required>
+                            <label class="custom-file-label" for="file" id="fileLabel" 
+                                   style="background-color: #1a202c; border: 1px solid #4a5568; color: #cbd5e0;">
+                                Choose file...
+                            </label>
+                        </div>
+                        <small class="form-text" style="color: #a0aec0;">
+                            Supported formats: PDF, DOC, DOCX, XLS, XLSX, JPG, PNG (Max: 10MB)
+                        </small>
+                    </div>
+                    
+                    <!-- Origin Office -->
+                    <div class="form-group">
+                        <label for="department" style="color: #cbd5e0; font-weight: bold;">Origin Office:</label>
+                        <select name="department" id="department" class="form-control"
+                                style="background-color: #1a202c; border: 1px solid #4a5568; color: #fff;" required>
+                            <option value="">Select a department</option>
+                            <!-- Departments will be loaded via JavaScript -->
+                        </select>
+                    </div>
+                    
+                    <!-- Originator -->
+                    <div class="form-group">
+                        <label for="originator" style="color: #cbd5e0; font-weight: bold;">Originator:</label>
+                        <input type="text" name="originator" id="originator" class="form-control"
+                               style="background-color: #1a202c; border: 1px solid #4a5568; color: #fff;" 
+                               placeholder="Enter originator name" required>
+                    </div>
+                    
+                    <!-- Destination Office -->
+                    <div class="form-group">
+                        <label for="destination" style="color: #cbd5e0; font-weight: bold;">Destination Office:</label>
+                        <select name="destination" id="destination" class="form-control"
+                                style="background-color: #1a202c; border: 1px solid #4a5568; color: #fff;" required>
+                            <option value="">Select a destination</option>
+                       
+                        </select>
+                    </div>
+                    
+                    <!-- Receiver -->
+                    <div class="form-group">
+                        <label for="receiver" style="color: #cbd5e0; font-weight: bold;">Receiver:</label>
+                        <input type="text" name="receiver" id="receiver" class="form-control"
+                               style="background-color: #1a202c; border: 1px solid #4a5568; color: #fff;" 
+                               placeholder="Enter receiver name" required>
+                    </div>
+                    
+                    <!-- Comments -->
+                    <div class="form-group">
+                        <label for="comments" style="color: #cbd5e0; font-weight: bold;">Comments:</label>
+                        <select name="comments" id="comments" class="form-control"
+                                style="background-color: #1a202c; border: 1px solid #4a5568; color: #fff;" required>
+                            <option value="-">-</option>
+                            <option value="Sent">Sent</option>
+                            <option value="Received">Received</option>
+                            <option value="Approved">Approved</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Date of Origination -->
+                    <div class="form-group">
+                        <label for="date_of_origination" style="color: #cbd5e0; font-weight: bold;">Date of Origination:</label>
+                        <input type="date" name="date_of_origination" id="date_of_origination" class="form-control"
+                               style="background-color: #1a202c; border: 1px solid #4a5568; color: #fff;" required>
+                    </div>
+                </form>
+                
+                
+                <div id="uploadMessage" style="margin-top: 15px; text-align: center;"></div>
+            </div>
+            <div class="modal-footer" style="border-top: 1px solid #4a5568;">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <button type="submit" form="uploadForm" class="btn btn-primary" style="background-color: #3182ce;">
+                    <i class="fas fa-upload"></i> Upload File
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
     <!-- Scripts -->
     <script>
@@ -704,7 +819,96 @@ $dashboardData = $dashboard->getDashboardData($currentUser['user_id']);
         // Adjust on window resize
         window.addEventListener('resize', adjustMainContent);
     </script>
+    <script>
+$('#uploadModal').on('show.bs.modal', function() {
+    loadDepartments();
+});
+
+document.getElementById('file').addEventListener('change', function() {
+    const fileName = this.files[0] ? this.files[0].name : 'Choose file...';
+    document.getElementById('fileLabel').textContent = fileName;
     
+    const fileNameInput = document.getElementById('file_name');
+    if (!fileNameInput.value && this.files[0]) {
+        const nameWithoutExt = this.files[0].name.replace(/\.[^/.]+$/, "");
+        fileNameInput.value = nameWithoutExt;
+    }
+});
+
+function loadDepartments() {
+    fetch('get_departments.php')
+        .then(response => response.json())
+        .then(departments => {
+            const departmentSelect = document.getElementById('department');
+            const destinationSelect = document.getElementById('destination');
+            
+            departmentSelect.innerHTML = '<option value="">Select a department</option>';
+            destinationSelect.innerHTML = '<option value="">Select a destination</option>';
+            
+            departments.forEach(dept => {
+                const option1 = new Option(dept, dept);
+                const option2 = new Option(dept, dept);
+                departmentSelect.appendChild(option1);
+                destinationSelect.appendChild(option2);
+            });
+        })
+        .catch(error => {
+            console.error('Error loading departments:', error);
+        });
+}
+
+// Handle form submission
+document.getElementById('uploadForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const messageDiv = document.getElementById('uploadMessage');
+    const fileInput = document.getElementById('file');
+    
+    
+    if (!fileInput.files[0]) {
+        messageDiv.innerHTML = '<p style="color: #e53e3e;">Please select a file to upload.</p>';
+        return;
+    }
+    
+    // Validate file size (10MB limit)
+    const maxSize = 10 * 1024 * 1024; // 10MB in bytes
+    if (fileInput.files[0].size > maxSize) {
+        messageDiv.innerHTML = '<p style="color: #e53e3e;">File size must be less than 10MB.</p>';
+        return;
+    }
+    
+    messageDiv.innerHTML = '<p style="color: #3182ce;"><i class="fas fa-spinner fa-spin"></i> Uploading...</p>';
+    
+    fetch('upload.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.text())
+    .then(data => {
+        messageDiv.innerHTML = data;
+        
+        if (data.includes('success')) {
+            setTimeout(() => {
+                $('#uploadModal').modal('hide');
+                this.reset();
+                document.getElementById('fileLabel').textContent = 'Choose file...';
+                messageDiv.innerHTML = '';
+            }, 2000);
+        }
+    })
+    .catch(error => {
+        messageDiv.innerHTML = '<p style="color: #e53e3e;">An error occurred. Please try again.</p>';
+        console.error('Error:', error);
+    });
+});
+
+$('#uploadModal').on('hidden.bs.modal', function() {
+    document.getElementById('uploadMessage').innerHTML = '';
+    document.getElementById('uploadForm').reset();
+    document.getElementById('fileLabel').textContent = 'Choose file...';
+});
+</script>
     <?php
     // Helper functions
     function formatBytes($bytes, $precision = 2) {
@@ -731,6 +935,8 @@ $dashboardData = $dashboard->getDashboardData($currentUser['user_id']);
             default: return 'gray';
         }
     }
+
+    
     ?>
 </body>
 </html>

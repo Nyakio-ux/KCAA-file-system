@@ -258,11 +258,15 @@ class AuthMenus {
                 'permission' => true
             ],
             'upload' => [
-                'title' => 'Upload File',
-                'icon' => 'fas fa-upload',
-                'url' => 'upload.php',
-                'permission' => true
-            ]
+    'title' => 'Upload File',
+    'icon' => 'fas fa-upload',
+    'url' => '#', 
+    'permission' => true,
+    'attributes' => [
+        'data-toggle' => 'modal',
+        'data-target' => '#uploadModal'
+    ]
+]
         ];
     }
     
