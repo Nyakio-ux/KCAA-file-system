@@ -249,26 +249,16 @@ class AuthMenus {
     /**
      * Regular user menus
      */
-    private function getUserMenus($departmentId) {
-        return [
-            'department' => [
-                'title' => 'My Department',
-                'icon' => 'fas fa-users',
-                'url' => 'department.php?id='.$departmentId,
-                'permission' => true
-            ],
-            'upload' => [
-    'title' => 'Upload File',
-    'icon' => 'fas fa-upload',
-    'url' => '#', 
-    'permission' => true,
-    'attributes' => [
-        'data-toggle' => 'modal',
-        'data-target' => '#uploadModal'
-    ]
-]
-        ];
-    }
+   private function getUserMenus($departmentId) {
+    return [
+        'department' => [
+            'title' => 'My Department',
+            'icon' => 'fas fa-users',
+            'url' => 'department.php?id='.$departmentId,
+            'permission' => true
+        ],
+    ];
+}
     
     /**
      * Check if user has permission to access a page

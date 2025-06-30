@@ -644,5 +644,71 @@ class Dashboard {
             error_log("Get department files error: " . $e->getMessage());
             return ['success' => false, 'message' => 'Failed to retrieve department files'];
         }
+
+
+    }
+
+    /**
+     * Get user profile data
+     */
+    public function getUserProfile($userId) {
+        $user = $this->getUserById($userId);
+        if (!$user) {
+            return null;
+        }
+        
+        // Get user roles
+        $conn = $this->db->connect();
+        $stmt = $conn->prepare("
+            SELECT 
+                r.role_id, 
+                r.role_name, 
+                ur.department_id, 
+                d.department_name
+            FROM user_roles ur
+            JOIN roles r ON ur.role_id = r.role_id
+            LEFT JOIN departments d ON ur.department_id = d.department_id
+            WHERE ur.user_id = :user_id AND ur.is_active = TRUE
+        ");
+        $stmt->bindParam(':user_id', $userId);
+        $stmt->execute();
+        $roles = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Get user categories
+        $stmt = $conn->prepare("
+            SELECT 
+                uc.category_id, 
+                uc.category_name
+            FROM user_categories uc
+            WHERE uc.category_id = :category_id
+        ");
+        $stmt->bindParam(':category_id', $user['user_category_id']);
+        $stmt->execute();
+        $categories = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        return [
+            'user' => $user,
+            'roles' => $roles,
+            'categories' => $categories
+        ];
+    }
+    /**
+     * Get user recent activities
+     */
+    public function getUserRecentActivities($userId) {
+        $conn = $this->db->connect();
+        $stmt = $conn->prepare("
+            SELECT 
+                a.activity_id, 
+                a.activity_type, 
+                a.timestamp
+            FROM user_activities a
+            WHERE a.user_id = :user_id
+            ORDER BY a.timestamp DESC
+            LIMIT 10
+        ");
+        $stmt->bindParam(':user_id', $userId);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }
