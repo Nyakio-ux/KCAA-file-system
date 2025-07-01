@@ -22,7 +22,7 @@ class AuthLayout {
             <div class="relative z-10 min-h-screen flex items-center justify-center p-4">
                 <div class="w-full max-w-md">
                     <div class="bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 overflow-hidden animate-slideUp">
-                        <div class="px-8 pt-8 pb-6 text-center bg-slate-800/20">
+                        <div class="px-8 pt-4 pb-2 text-center bg-slate-800/20">
                         <?php if (!empty($config['logo'])): ?>
                            <img src="<?php echo htmlspecialchars($config['logo']); ?>" alt="Logo" class="mx-auto mb-6 w-40 h-40 object-contain rounded-2xl shadow-lg">
                         <?php endif; ?>
