@@ -5,7 +5,7 @@
             <div class="bg-primary-600 text-white p-2 rounded-lg">
                 <i class="fas fa-file-alt text-xl"></i>
             </div>
-            <h1 class="text-xl font-bold text-gray-800 dark:text-white">File Management</h1>
+            <h1 class="text-xl font-bold text-gray-800 dark:text-white">KCAA Smart Files</h1>
         </div>
     </div>
     

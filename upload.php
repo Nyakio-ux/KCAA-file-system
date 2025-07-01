@@ -12,6 +12,14 @@ $conn = new mysqli($host, $username, $password, $database);
 if ($conn->connect_error) {
     die("<p class='error'>Database connection failed: " . $conn->connect_error . "</p>");
 }
+// Fetch departments from the database
+$departments = [];
+$result = $conn->query("SELECT department_name FROM departments");
+if ($result && $result->num_rows > 0) {
+    while ($row = $result->fetch_assoc()) {
+        $departments[] = $row['department_name'];
+    }
+}
 
 // Handle file upload
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {

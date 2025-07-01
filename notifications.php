@@ -24,7 +24,7 @@ $notifications = $dashboard->getUserNotifications($currentUser['user_id'], 20, f
                     <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Notifications</h2>
                     <p class="text-gray-600 dark:text-gray-400">Your recent notifications</p>
                 </div>
-                <div class="flex items-center space-x-4">
+<div class="flex items-center space-x-4">
                     <button id="markAllRead" class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors duration-200">
                         <i class="fas fa-check-circle"></i>
                         <span>Mark All as Read</span>
@@ -110,7 +110,7 @@ function getNotificationIcon($type) {
     }
 }
 
-// Helper function to format date
+// Helper functi                on to format date
 function formatDate($dateString) {
     return date('M j, Y g:i A', strtotime($dateString));
 }

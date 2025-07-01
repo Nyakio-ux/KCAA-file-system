@@ -78,7 +78,7 @@
                     </div>
                     
                     <!-- File Upload -->
-                    <div class="mt-4 sm:mt-6">
+                    <!-- <div class="mt-4 sm:mt-6"> -->
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">File Upload*</label>
                         <div class="mt-1 flex justify-center px-4 sm:px-6 pt-4 sm:pt-5 pb-4 sm:pb-6 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-md">
                             <div class="space-y-1 text-center">
@@ -127,9 +127,8 @@
         </div>
     </div>
 </div>
-
 <script>
-$(document).ready(function() {
+    $(document).ready(function() {
     function populateDropdown(selector, data, placeholder) {
         const select = $(selector);
         select.empty();

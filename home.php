@@ -10,7 +10,6 @@ $dashboardData = $dashboard->getDashboardData($currentUser['user_id']);
 
 <div class="flex h-full">
     <?php require_once 'userincludes/sidebar.php'; ?>
-    
     <!-- Main Content -->
     <div class="flex-1 ml-64 transition-all duration-300" id="mainContent">
         <?php require_once 'userincludes/topnav.php'; ?>
@@ -490,14 +489,10 @@ $dashboardData = $dashboard->getDashboardData($currentUser['user_id']);
     </div>
 </div>
 
-<?php require_once 'modals/uploadModal.php'; ?>
-
-
-
-<!-- Scripts -->
-<script src="assets/js/main.js"></script>
-
+<?php require_once 'modals/uploadModal.php';?>
+<!-- <?php require_once 'Functions/dashboarFunctions.php'; ?> -->
 <?php
+
 // Helper functions
 function formatBytes($bytes, $precision = 2) {
     $units = ['B', 'KB', 'MB', 'GB', 'TB'];
@@ -524,6 +519,13 @@ function getStatusBadge($status) {
     }
 }
 ?>
+
+
+<!-- Scripts -->
+<script src="assets/js/main.js"></script>
+
+
+
 
 </body>
 </html>
