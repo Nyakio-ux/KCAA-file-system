@@ -65,7 +65,14 @@ $activities = $activities['success'] ? $activities['activities'] : [];
                 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
                     <div class="flex flex-col items-center">
                         <div class="relative mb-4">
-                            <img src="assets/images/default-avatar.png" class="w-32 h-32 rounded-full object-cover" alt="Profile Image">
+                            <?php
+                                $firstInitial = !empty($user['first_name']) ? strtoupper($user['first_name'][0]) : '';
+                                $lastInitial = !empty($user['last_name']) ? strtoupper($user['last_name'][0]) : '';
+                                $initials = $firstInitial . $lastInitial;
+                            ?>
+                            <div class="w-32 h-32 rounded-full bg-primary-600 dark:bg-primary-800 flex items-center justify-center text-white text-4xl font-bold object-cover">
+                                <?php echo htmlspecialchars($initials ?: '?'); ?>
+                            </div>
                             <?php if ($user['is_active'] ?? false): ?>
                                 <span class="absolute bottom-0 right-0 bg-green-500 rounded-full w-4 h-4 border-2 border-white dark:border-gray-800"></span>
                             <?php else: ?>

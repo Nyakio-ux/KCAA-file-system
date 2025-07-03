@@ -5,7 +5,7 @@
             <!-- Modal header -->
             <div class="modal-header flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 rounded-t-md">
                 <h5 class="text-lg sm:text-xl font-semibold text-gray-800 dark:text-white" id="uploadModalLabel">
-                    Upload New File
+                    Register New File
                 </h5>
                 <button type="button" class="btn-close box-content w-4 h-4 p-1 text-gray-500 dark:text-gray-400 border-none rounded-none opacity-50 focus:shadow-none focus:outline-none focus:opacity-100 hover:text-gray-700 hover:opacity-75 hover:no-underline" data-bs-dismiss="modal" aria-label="Close">
                     <i class="fas fa-times"></i>
@@ -44,6 +44,12 @@
                                 <label for="originator" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Originator*</label>
                                 <input type="text" id="originator" name="originator" required class="w-full px-3 sm:px-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white" placeholder="Person who created the document">
                             </div>
+                            
+                            <!-- Date of Origination -->
+                            <div>
+                                <label for="date_of_origination" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date of Origination*</label>
+                                <input type="date" id="date_of_origination" name="date_of_origination" required class="w-full px-3 sm:px-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
+                            </div>
                         </div>
                         
                         <!-- Right Column -->
@@ -63,10 +69,12 @@
                                 <input type="text" id="receiver" name="receiver" required class="w-full px-3 sm:px-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white" placeholder="Who will receive this document?">
                             </div>
                             
-                            <!-- Date of Origination -->
+                            <!-- Confidentiality -->
                             <div>
-                                <label for="date_of_origination" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date of Origination*</label>
-                                <input type="date" id="date_of_origination" name="date_of_origination" required class="w-full px-3 sm:px-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
+                                <label class="flex items-center space-x-2">
+                                    <input type="checkbox" id="is_confidential" name="is_confidential" class="rounded border-gray-300 text-primary-600 shadow-sm focus:border-primary-300 focus:ring focus:ring-primary-200 focus:ring-opacity-50">
+                                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Confidential Document</span>
+                                </label>
                             </div>
                             
                             <!-- Comments -->
@@ -77,20 +85,20 @@
                         </div>
                     </div>
                     
-                    <!-- File Upload -->
+                    <!-- File Upload (Optional) -->
                     <div class="mt-4 sm:mt-6">
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">File Upload*</label>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">File Upload (Optional)</label>
                         <div class="mt-1 flex justify-center px-4 sm:px-6 pt-4 sm:pt-5 pb-4 sm:pb-6 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-md">
                             <div class="space-y-1 text-center">
                                 <div class="flex flex-col sm:flex-row text-sm text-gray-600 dark:text-gray-400">
                                     <label for="file" class="relative cursor-pointer bg-white dark:bg-gray-800 rounded-md font-medium text-primary-600 dark:text-primary-400 hover:text-primary-500 dark:hover:text-primary-300 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-primary-500">
                                         <span>Upload a file</span>
-                                        <input id="file" name="file" type="file" required class="sr-only">
+                                        <input id="file" name="file" type="file" class="sr-only">
                                     </label>
                                     <p class="sm:pl-1">or drag and drop</p>
                                 </div>
                                 <p class="text-xs text-gray-500 dark:text-gray-400">
-                                    PDF, DOCX, XLSX, PPTX up to 10MB
+                                    PDF, DOCX, XLSX, PPTX up to 10MB (Leave empty for physical files)
                                 </p>
                                 <div id="filePreview" class="hidden mt-4">
                                     <div class="flex items-center justify-between bg-gray-100 dark:bg-gray-700 p-3 rounded-md">
@@ -118,7 +126,7 @@
                     Cancel
                 </button>
                 <button type="submit" form="uploadForm" class="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 flex items-center justify-center order-1 sm:order-2">
-                    <span id="submitText">Upload File</span>
+                    <span id="submitText">Register File</span>
                     <span id="spinner" class="hidden ml-2">
                         <i class="fas fa-spinner fa-spin"></i>
                     </span>
@@ -130,6 +138,7 @@
 
 <script>
 $(document).ready(function() {
+    // Populate department dropdowns
     function populateDropdown(selector, data, placeholder) {
         const select = $(selector);
         select.empty();
@@ -137,19 +146,29 @@ $(document).ready(function() {
             value: '',
             text: placeholder
         }));
-        data.forEach(function(item) {
+        $.each(data, function(index, item) {
             select.append($('<option>', {
-                value: item,
-                text: item
+                value: item.department_id,
+                text: item.department_name
             }));
         });
     }
-    $.getJSON('get_departments.php', function(data) {
-        populateDropdown('#department', data, 'Select Department');
-        populateDropdown('#destination', data, 'Select Destination');
+
+    // Load departments from API
+    $.getJSON('api/departments', function(data) {
+        if (data.success && data.departments) {
+            populateDropdown('#department', data.departments, 'Select Department');
+            populateDropdown('#destination', data.departments, 'Select Destination');
+        } else {
+            console.error('Failed to load departments');
+            showDropdownError();
+        }
     }).fail(function() {
         console.error('Failed to load departments');
-        // Show error in both dropdowns
+        showDropdownError();
+    });
+
+    function showDropdownError() {
         $('#department').append($('<option>', {
             value: '',
             text: 'Error loading departments'
@@ -158,7 +177,7 @@ $(document).ready(function() {
             value: '',
             text: 'Error loading destinations'
         }));
-    });
+    }
 
     // Handle file selection preview
     $('#file').on('change', function() {
@@ -174,6 +193,7 @@ $(document).ready(function() {
         $('#filePreview').addClass('hidden');
     });
 
+    // Drag and drop functionality
     const dropArea = $('.border-dashed');
     
     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
@@ -189,7 +209,6 @@ $(document).ready(function() {
         });
     });
 
-    // Unhighlight when drag leaves or drops
     ['dragleave', 'drop'].forEach(eventName => {
         dropArea.on(eventName, function() {
             $(this).removeClass('border-primary-500 bg-primary-50 dark:bg-primary-900 bg-opacity-50');
@@ -220,37 +239,55 @@ $(document).ready(function() {
         const spinner = $('#spinner');
         
         // Show loading state
-        submitText.text('Uploading...');
+        submitText.text('Processing...');
         spinner.removeClass('hidden');
         submitBtn.prop('disabled', true);
         feedback.addClass('hidden').empty();
         
         $.ajax({
-            url: 'upload_file.php',
+            url: 'api/files',
             type: 'POST',
             data: formData,
             processData: false,
             contentType: false,
             success: function(response) {
-                if (response.includes('successfully')) {
-                    feedback.removeClass('hidden').addClass('bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-300').html(response);
+                if (response.success) {
+                    const message = $('#file')[0].files.length > 0 ? 
+                        'File uploaded successfully' : 
+                        'Physical file registered successfully';
+                    
+                    feedback.removeClass('hidden')
+                           .addClass('bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-300')
+                           .html(message);
                     form[0].reset();
                     $('#filePreview').addClass('hidden');
                     
                     // Close modal after 2 seconds
                     setTimeout(function() {
                         $('#uploadModal').modal('hide');
-                        location.reload(); 
+                        if (typeof reloadFileList === 'function') {
+                            reloadFileList();
+                        } else {
+                            location.reload();
+                        }
                     }, 2000);
                 } else {
-                    feedback.removeClass('hidden').addClass('bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-300').html(response);
+                    feedback.removeClass('hidden')
+                           .addClass('bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-300')
+                           .html(response.message || 'Error processing request');
                 }
             },
             error: function(xhr, status, error) {
-                feedback.removeClass('hidden').addClass('bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-300').text('Error: ' + error);
+                let errorMessage = 'Error: ' + error;
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    errorMessage = xhr.responseJSON.message;
+                }
+                feedback.removeClass('hidden')
+                       .addClass('bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-300')
+                       .text(errorMessage);
             },
             complete: function() {
-                submitText.text('Upload File');
+                submitText.text('Register File');
                 spinner.addClass('hidden');
                 submitBtn.prop('disabled', false);
             }
@@ -267,10 +304,14 @@ $(document).ready(function() {
         $('#uploadFeedback').removeClass('bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-300 bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-300');
     });
 
+    // Close modal when clicking outside
     $('#uploadModal').on('click', function(e) {
         if (e.target === this) {
             $(this).modal('hide');
         }
     });
+
+    // Set default date to today
+    $('#date_of_origination').val(new Date().toISOString().split('T')[0]);
 });
 </script>

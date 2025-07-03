@@ -503,6 +503,10 @@ class Auth {
             error_log("Account lock check error: " . $e->getMessage());
         }
     }
+
+    public function getUserId() {
+        return $_SESSION['user_id'] ?? null;
+    }
     
     private function notifyAccountLock($userId) {
         $user = $this->getUserById($userId);

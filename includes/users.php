@@ -9,33 +9,10 @@ class UserActions {
     private $notification;
 
     public function __construct() {
-        $this->db = new Database();
-        $this->notification = new Notification();
-    }
-
-    /**
-     * Get user by ID - replaces Auth::getUserById
-    **/
-    /** 
-    private function getUserById($userId) {
-        try {
-            $conn = $this->db->connect();
-            
-            $stmt = $conn->prepare("
-                SELECT user_id, username, email, first_name, last_name, phone, is_active 
-                FROM users 
-                WHERE user_id = :user_id
-            ");
-            $stmt->bindParam(':user_id', $userId);
-            $stmt->execute();
-            
-            return $stmt->fetch(PDO::FETCH_ASSOC);
-            
-        } catch (PDOException $e) {
-            error_log("Get user by ID error: " . $e->getMessage());
-            return null;
-        }
-    } **/
+    $this->db = new Database();
+    $this->mail = new Mail();  
+    $this->notification = new Notification();
+}
 
     /**
      * Create a new user with notification
@@ -82,13 +59,13 @@ class UserActions {
                 )
             ");
             
-            $stmt->bindParam(':username', $userData['username']);
-            $stmt->bindParam(':email', $userData['email']);
-            $stmt->bindParam(':password_hash', $passwordHash);
-            $stmt->bindParam(':first_name', $userData['first_name']);
-            $stmt->bindParam(':last_name', $userData['last_name']);
-            $stmt->bindParam(':phone', $userData['phone'] ?? null);
-            $stmt->bindParam(':user_category_id', $userData['user_category_id'] ?? 1); // Default to standard user
+            $stmt->bindValue(':username', $userData['username']);
+            $stmt->bindValue(':email', $userData['email']);
+            $stmt->bindValue(':password_hash', $passwordHash);
+            $stmt->bindValue(':first_name', $userData['first_name']);
+            $stmt->bindValue(':last_name', $userData['last_name']);
+            $stmt->bindValue(':phone', $userData['phone'] ?? null);
+            $stmt->bindValue(':user_category_id', $userData['user_category_id'] ?? 1);
             $stmt->bindValue(':is_active', $userData['is_active'] ?? true, PDO::PARAM_BOOL);
             
             $stmt->execute();

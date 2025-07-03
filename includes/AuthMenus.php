@@ -137,8 +137,9 @@ class AuthMenus {
                     ],
                     'user_roles' => [
                         'title' => 'User Roles',
-                        'url' => 'user_roles.php'
+                        'url' => 'roles.php'
                     ]
+
                 ]
             ],
             'departments' => [
@@ -155,7 +156,7 @@ class AuthMenus {
                 'submenus' => [
                     'file_categories' => [
                         'title' => 'File Categories',
-                        'url' => 'file_categories.php'
+                        'url' => 'categories.php'
                     ],
                     'user_categories' => [
                         'title' => 'User Categories',
