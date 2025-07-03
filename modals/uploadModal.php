@@ -85,9 +85,15 @@
                         </div>
                     </div>
                     
+<<<<<<< HEAD
                     <!-- File Upload (Optional) -->
                     <div class="mt-4 sm:mt-6">
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">File Upload (Optional)</label>
+=======
+                    <!-- File Upload -->
+                    <!-- <div class="mt-4 sm:mt-6"> 
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">File Upload*</label>
+>>>>>>> 7d26803a29e06fd37a62aa5601071afd436dfd90
                         <div class="mt-1 flex justify-center px-4 sm:px-6 pt-4 sm:pt-5 pb-4 sm:pb-6 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-md">
                             <div class="space-y-1 text-center">
                                 <div class="flex flex-col sm:flex-row text-sm text-gray-600 dark:text-gray-400">
@@ -113,7 +119,7 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </div> -->
                     
                     <!-- Form submission feedback -->
                     <div id="uploadFeedback" class="hidden mt-4 p-4 rounded-md"></div>
@@ -135,10 +141,10 @@
         </div>
     </div>
 </div>
-
 <script>
 $(document).ready(function() {
     // Populate department dropdowns
+    $(document).ready(function() {
     function populateDropdown(selector, data, placeholder) {
         const select = $(selector);
         select.empty();

@@ -32,6 +32,7 @@ if (isset($_GET['redirect']) && $_GET['redirect'] === 'now') {
             from { transform: rotate(0deg); }
             to { transform: rotate(360deg); }
         }
+        
         .spinner {
             animation: spin 1s linear infinite;
         }
@@ -41,6 +42,8 @@ if (isset($_GET['redirect']) && $_GET['redirect'] === 'now') {
     </style>
 </head>
 <body class="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-gray-900 flex items-center justify-center">
+    <div class="flex flex-col items-center">
+        <img src="assets/images/logo.png" alt="KCAA Logo" class="mb-8 w-32 h-auto">
     <div class="relative">
         <div 
             class="w-16 h-16 border-4 border-blue-200/30 border-t-blue-500 rounded-full spinner">
@@ -48,6 +51,7 @@ if (isset($_GET['redirect']) && $_GET['redirect'] === 'now') {
         <div 
             class="absolute inset-0 w-16 h-16 border-4 border-transparent border-r-orange-500 rounded-full spinner-reverse">
         </div>
+    </div>
     </div>
 
     <script>
