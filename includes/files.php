@@ -1424,4 +1424,29 @@ public function uploadFile($fileData, $uploadedBy) {
             return $bytes . ' bytes';
         }
     }
+
+
+    /**
+     * Get all workflow statuses
+     */
+    public function getWorkflowStatuses() {
+        try {
+            $conn = $this->db->connect();
+            
+            $stmt = $conn->prepare("
+                SELECT * FROM workflow_statuses 
+                ORDER BY status_order ASC
+            ");
+            $stmt->execute();
+            
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+        } catch (PDOException $e) {
+            error_log("Get workflow statuses error: " . $e->getMessage());
+            return [];
+        }
+    }
+
+
+    
 }

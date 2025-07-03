@@ -252,6 +252,7 @@ $activities = $activities['success'] ? $activities['activities'] : [];
         </main>
     </div>
 </div>
+<script src="assets/js/main.js"></script>
 
 <?php
 // Helper functions
