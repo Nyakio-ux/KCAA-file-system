@@ -232,7 +232,7 @@ $(document).ready(function() {
         e.preventDefault();
         
         const form = $(this);
-        const formData = new FormData(this);
+        const formData = new FormData();
         const feedback = $('#uploadFeedback');
         const submitBtn = form.find('[type="submit"]');
         const submitText = $('#submitText');
@@ -244,52 +244,97 @@ $(document).ready(function() {
         submitBtn.prop('disabled', true);
         feedback.addClass('hidden').empty();
         
+        // Manually append all form fields to ensure they're included
+        const formElements = form[0].elements;
+        for (let i = 0; i < formElements.length; i++) {
+            const element = formElements[i];
+            if (element.name) {
+                if (element.type === 'file') {
+                    // For file inputs, append each selected file
+                    const files = element.files;
+                    for (let j = 0; j < files.length; j++) {
+                        formData.append(element.name, files[j]);
+                    }
+                } else if (element.type === 'checkbox' || element.type === 'radio') {
+                    if (element.checked) {
+                        formData.append(element.name, element.value || 'on');
+                    }
+                } else if (element.name) {
+                    formData.append(element.name, element.value || '');
+                }
+            }
+        }
+        
+        // Log form data for debugging
+        console.log('Form data:', Object.fromEntries(formData));
+        
         $.ajax({
-            url: 'api/files',
+            url: 'api/files.php',
             type: 'POST',
             data: formData,
-            processData: false,
-            contentType: false,
+            processData: false,  // Don't process the files
+            contentType: false,  // Don't set content type (let the browser set it with the boundary)
+            cache: false,       // Don't cache the request
+            dataType: 'json',   // Expect JSON response
+            xhr: function() {
+                const xhr = new window.XMLHttpRequest();
+                xhr.upload.addEventListener("progress", function(evt) {
+                    if (evt.lengthComputable) {
+                        const percentComplete = evt.loaded / evt.total;
+                        console.log("Upload progress: " + (percentComplete * 100) + "%");
+                        feedback.removeClass('hidden')
+                               .addClass('bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-300')
+                               .html("Uploading... " + Math.round(percentComplete * 100) + "%");
+                    }
+                }, false);
+                return xhr;
+            },
             success: function(response) {
-                if (response.success) {
-                    const message = $('#file')[0].files.length > 0 ? 
-                        'File uploaded successfully' : 
-                        'Physical file registered successfully';
-                    
+                console.log('Server response:', response);
+                if (response && response.success) {
                     feedback.removeClass('hidden')
                            .addClass('bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-300')
-                           .html(message);
+                           .html(response.message || 'File uploaded successfully');
                     form[0].reset();
                     $('#filePreview').addClass('hidden');
                     
                     // Close modal after 2 seconds
                     setTimeout(function() {
                         $('#uploadModal').modal('hide');
-                        if (typeof reloadFileList === 'function') {
-                            reloadFileList();
-                        } else {
-                            location.reload();
-                        }
+                        location.reload();
                     }, 2000);
                 } else {
+                    console.error('Server error:', response);
                     feedback.removeClass('hidden')
                            .addClass('bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-300')
                            .html(response.message || 'Error processing request');
                 }
             },
             error: function(xhr, status, error) {
+                console.error('AJAX error:', { 
+                    status: status, 
+                    error: error, 
+                    responseText: xhr.responseText,
+                    statusText: xhr.statusText
+                });
+                
                 let errorMessage = 'Error: ' + error;
-                if (xhr.responseJSON && xhr.responseJSON.message) {
-                    errorMessage = xhr.responseJSON.message;
+                try {
+                    const errorResponse = JSON.parse(xhr.responseText);
+                    errorMessage = errorResponse.message || errorMessage;
+                } catch (e) {
+                    errorMessage = xhr.responseText || errorMessage;
                 }
+                
                 feedback.removeClass('hidden')
                        .addClass('bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-300')
-                       .text(errorMessage);
+                       .html(errorMessage);
             },
             complete: function() {
+                // Re-enable the submit button and reset the text
+                submitBtn.prop('disabled', false);
                 submitText.text('Register File');
                 spinner.addClass('hidden');
-                submitBtn.prop('disabled', false);
             }
         });
     });

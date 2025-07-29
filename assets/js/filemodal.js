@@ -77,66 +77,22 @@ $(document).ready(function() {
         }
     });
 
-    // Form submission
-    $('#uploadForm').on('submit', function(e) {
-        e.preventDefault();
-        
-        const form = $(this);
-        const formData = new FormData(this);
-        const feedback = $('#uploadFeedback');
-        const submitBtn = form.find('[type="submit"]');
-        const submitText = $('#submitText');
-        const spinner = $('#spinner');
-        
-        // Show loading state
-        submitText.text('Uploading...');
-        spinner.removeClass('hidden');
-        submitBtn.prop('disabled', true);
-        feedback.addClass('hidden').empty();
-        
-        $.ajax({
-            url: 'upload_file.php',
-            type: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
-            success: function(response) {
-                if (response.includes('successfully')) {
-                    feedback.removeClass('hidden').addClass('bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-300').html(response);
-                    form[0].reset();
-                    $('#filePreview').addClass('hidden');
-                    
-                    // Close modal after 2 seconds
-                    setTimeout(function() {
-                        $('#uploadModal').modal('hide');
-                        location.reload(); 
-                    }, 2000);
-                } else {
-                    feedback.removeClass('hidden').addClass('bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-300').html(response);
-                }
-            },
-            error: function(xhr, status, error) {
-                feedback.removeClass('hidden').addClass('bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-300').text('Error: ' + error);
-            },
-            complete: function() {
-                submitText.text('Upload File');
-                spinner.addClass('hidden');
-                submitBtn.prop('disabled', false);
-            }
-        });
-    });
-    
+    // Form submission is handled in uploadModal.php
+
     // Reset modal when closed
-    $('#uploadModal').on('hidden.bs.modal', function() {
+    $('#uploadModal').on('hidden.bs.modal', function () {
         $('#uploadForm')[0].reset();
         $('#filePreview').addClass('hidden');
         $('#uploadFeedback').addClass('hidden').empty();
-        
+
         // Reset feedback classes
-        $('#uploadFeedback').removeClass('bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-300 bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-300');
+        $('#uploadFeedback').removeClass(
+            'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-300 ' +
+            'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-300'
+        );
     });
 
-    $('#uploadModal').on('click', function(e) {
+    $('#uploadModal').on('click', function (e) {
         if (e.target === this) {
             $(this).modal('hide');
         }

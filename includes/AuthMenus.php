@@ -255,7 +255,7 @@ class AuthMenus {
         'department' => [
             'title' => 'My Department',
             'icon' => 'fas fa-users',
-            'url' => 'department.php?id='.$departmentId,
+            'url' => 'departments_users.php?id='.$departmentId,
             'permission' => true
         ],
     ];

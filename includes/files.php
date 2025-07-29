@@ -1,4 +1,3 @@
-
 <?php
 require_once 'Database.php';
 require_once 'mail.php';
@@ -39,136 +38,153 @@ class FileActions {
     }
 
     /**
- * Upload a new file with metadata
- */
-public function uploadFile($fileData, $uploadedBy) {
-    $maxRetries = 3;
-    $retryCount = 0;
-    $result = null;
-    
-    do {
+     * Verify table structure
+     */
+    private function verifyTableStructure() {
         try {
             $conn = $this->db->connect();
             
-            // Set a lower lock timeout for this session
-            $conn->exec("SET SESSION innodb_lock_wait_timeout = 30");
+            // Check if files2 table exists and has required columns
+            $stmt = $conn->prepare("
+                SELECT COLUMN_NAME 
+                FROM INFORMATION_SCHEMA.COLUMNS 
+                WHERE TABLE_NAME = 'files2'
+            ");
+            $stmt->execute();
+            $columns = $stmt->fetchAll(PDO::FETCH_COLUMN);
             
-            // Validate required fields
-            $required = ['file_name', 'original_name', 'source_department_id', 'reference_number'];
-            foreach ($required as $field) {
-                if (empty($fileData[$field])) {
-                    return ['success' => false, 'message' => "Required field '$field' is missing"];
+            $requiredColumns = [
+                'id', 'file_name', 'reference_no', 'file_path', 'department',
+                'originator', 'destination', 'receiver', 'date_of_origination',
+                'comments', 'is_confidential', 'is_physical', 'uploaded_at'
+            ];
+            
+            foreach ($requiredColumns as $column) {
+                if (!in_array($column, $columns)) {
+                    throw new Exception("Missing required column: $column");
                 }
             }
             
-            // For digital files, validate file path and size
-            if (empty($fileData['is_physical'])) {
-                if (empty($fileData['file_path']) || empty($fileData['file_size'])) {
-                    return ['success' => false, 'message' => "Digital files require file path and size"];
-                }
-            }
+            return true;
             
-            // Start transaction
-            $conn->beginTransaction();
-            
+        } catch (Exception $e) {
+            error_log("Table structure verification failed: " . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    /**
+     * Upload a new file with metadata
+     */
+    public function uploadFile($fileData, $uploadedBy) {
+        $maxRetries = 10;
+        $retryCount = 0;
+        
+        do {
             try {
-                // Insert file metadata (only essential fields)
-                $stmt = $conn->prepare("
-                    INSERT INTO files (
-                        file_name, original_name, file_path, file_size, file_type, 
-                        mime_type, uploaded_by, source_department_id, 
-                        is_confidential, is_physical, reference_number
-                    ) VALUES (
-                        :file_name, :original_name, :file_path, :file_size, :file_type, 
-                        :mime_type, :uploaded_by, :source_department_id, 
-                        :is_confidential, :is_physical, :reference_number
-                    )
-                ");
+                // Verify table structure first
+                $this->verifyTableStructure();
                 
-                // ... [binding parameters remains the same] ...
+                $conn = $this->db->connect();
+                error_log("Database connection successful");
                 
-                $stmt->execute();
-                $fileId = $conn->lastInsertId();
+                // Validate required fields
+                $required = ['file_name', 'original_name', 'department', 'reference_no'];
+                foreach ($required as $field) {
+                    if (empty($fileData[$field])) {
+                        error_log("Missing required field: $field");
+                        return ['success' => false, 'message' => "Required field '$field' is missing"];
+                    }
+                }
                 
-                // Update remaining fields in a separate statement
-                if (!empty($fileData['description']) || !empty($fileData['category_id']) || 
-                    !empty($fileData['destination_department_id']) || !empty($fileData['comments'])) {
-                    
-                    $updateStmt = $conn->prepare("
-                        UPDATE files SET
-                            category_id = :category_id,
-                            description = :description,
-                            destination_department_id = :destination_department_id,
-                            destination_contact = :destination_contact,
-                            physical_location = :physical_location,
-                            originator = :originator,
-                            receiver = :receiver,
-                            date_of_origination = :date_of_origination,
-                            comments = :comments
-                        WHERE file_id = :file_id
+                // For digital files, validate file path and size
+                if (empty($fileData['is_physical'])) {
+                    if (empty($fileData['file_path']) || empty($fileData['file_size'])) {
+                        error_log("Missing file path or size for digital file");
+                        return ['success' => false, 'message' => "Digital files require file path and size"];
+                    }
+                }
+                
+                // Start transaction
+                $conn->beginTransaction();
+                error_log("Transaction started");
+                
+                try {
+                    // Insert file metadata into files2 table
+                    $stmt = $conn->prepare("
+                        INSERT INTO files2 (
+                            file_name, reference_no, file_path, department, 
+                            originator, destination, receiver, date_of_origination,
+                            comments, is_confidential, is_physical, uploaded_at
+                        ) VALUES (
+                            :file_name, :reference_no, :file_path, :department,
+                            :originator, :destination, :receiver, :date_of_origination,
+                            :comments, :is_confidential, :is_physical, NOW()
+                        )
                     ");
                     
-                    // ... [binding parameters remains the same] ...
+                    $stmt->bindParam(':file_name', $fileData['file_name']);
+                    $stmt->bindParam(':reference_no', $fileData['reference_no']);
+                    $stmt->bindParam(':file_path', $fileData['file_path'] ?? '');
+                    $stmt->bindParam(':department', $fileData['department']);
+                    $stmt->bindParam(':originator', $fileData['originator']);
+                    $stmt->bindParam(':destination', $fileData['destination']);
+                    $stmt->bindParam(':receiver', $fileData['receiver']);
+                    $stmt->bindParam(':date_of_origination', $fileData['date_of_origination']);
+                    $stmt->bindParam(':comments', $fileData['comments']);
+                    $stmt->bindParam(':is_confidential', $fileData['is_confidential']);
+                    $stmt->bindParam(':is_physical', $fileData['is_physical']);
                     
-                    $updateStmt->execute();
-                }
-                
-                // For physical files, set received_at timestamp - FIXED THIS SECTION
-                if (!empty($fileData['is_physical'])) {
-                    $updateReceived = $conn->prepare("UPDATE files SET received_at = NOW() WHERE file_id = :file_id");
-                    $updateReceived->bindParam(':file_id', $fileId);
-                    $updateReceived->execute();
+                    error_log("Executing insert query with data: " . print_r($fileData, true));
                     
-                    // Record the physical movement (can be done after commit)
-                    $this->recordPhysicalMovement(
-                        $fileId,
-                        null,
-                        $fileData['source_department_id'],
-                        $uploadedBy,
-                        'Initial receipt of physical file'
-                    );
+                    if (!$stmt->execute()) {
+                        error_log("Insert failed: " . print_r($stmt->errorInfo(), true));
+                        throw new Exception("Failed to insert file data");
+                    }
+                    
+                    $fileId = $conn->lastInsertId();
+                    error_log("File inserted successfully with ID: $fileId");
+                    
+                    // Commit transaction
+                    $conn->commit();
+                    error_log("Transaction committed");
+                    
+                    // Create initial workflow status
+                    $statusId = $this->getInitialWorkflowStatusId();
+                    if ($statusId) {
+                        $this->createFileApproval($fileId, $fileData['department'], $statusId);
+                        error_log("Workflow status created for file ID: $fileId");
+                    }
+                    
+                    // Log file access
+                    $this->logFileAccess($fileId, $uploadedBy, $fileData['is_physical'] ? 'physical_receive' : 'upload');
+                    
+                    // Notify appropriate parties
+                    $this->notifyFileUpload($fileId, $uploadedBy, $fileData);
+                    
+                    return ['success' => true, 'file_id' => $fileId, 'message' => 'File uploaded successfully'];
+                    
+                } catch (Exception $e) {
+                    error_log("Inner try-catch error: " . $e->getMessage());
+                    $conn->rollBack();
+                    throw $e;
                 }
                 
-                // Commit transaction early before non-critical operations
-                $conn->commit();
-                
-                // Create initial workflow status (outside transaction)
-                $statusId = $this->getInitialWorkflowStatusId();
-                if ($statusId) {
-                    $this->createFileApproval($fileId, $fileData['source_department_id'], $statusId);
+            } catch (Exception $e) {
+                error_log("Outer try-catch error: " . $e->getMessage());
+                if ($retryCount < $maxRetries) {
+                    $retryCount++;
+                    error_log("Retrying upload (attempt $retryCount of $maxRetries)");
+                    continue;
                 }
-                
-                // Log file access (outside transaction)
-                $this->logFileAccess($fileId, $uploadedBy, $fileData['is_physical'] ? 'physical_receive' : 'upload');
-                
-                // Notify appropriate parties (outside transaction)
-                $this->notifyFileUpload($fileId, $uploadedBy, $fileData);
-                
-                return ['success' => true, 'file_id' => $fileId];
-                
-            } catch (PDOException $e) {
-                $conn->rollBack();
-                throw $e; // Re-throw for retry logic
+                throw $e;
             }
             
-        } catch (PDOException $e) {
-            error_log("File upload attempt $retryCount failed: " . $e->getMessage());
-            
-            // Check if it's a lock timeout error
-            if (strpos($e->getMessage(), 'Lock wait timeout exceeded') === false) {
-                return ['success' => false, 'message' => 'Failed to upload file: ' . $e->getMessage()];
-            }
-            
-            $retryCount++;
-            if ($retryCount < $maxRetries) {
-                usleep(500000 * $retryCount); // Wait 0.5s, then 1s, then 1.5s
-                continue;
-            }
-            
-            return ['success' => false, 'message' => 'Failed to upload file after ' . $maxRetries . ' attempts: ' . $e->getMessage()];
-        }
-    } while ($retryCount < $maxRetries);
-}
+            break;
+        } while (true);
+        
+        return ['success' => false, 'message' => 'Upload failed after multiple attempts'];
+    }
 
     /**
      * Record physical file movement between departments
@@ -191,14 +207,12 @@ public function uploadFile($fileData, $uploadedBy) {
             
             // Update file's current location
             $stmt = $conn->prepare("
-                UPDATE files 
-                SET destination_department_id = :to_dept,
-                    physical_location = :location,
+                UPDATE files2 
+                SET department = :to_dept,
                     updated_at = NOW()
                 WHERE file_id = :file_id
             ");
             $stmt->bindParam(':to_dept', $toDeptId);
-            $stmt->bindValue(':location', "Department: " . $this->getDepartmentName($toDeptId));
             $stmt->bindParam(':file_id', $fileId);
             $stmt->execute();
             
@@ -240,10 +254,10 @@ public function uploadFile($fileData, $uploadedBy) {
                     CONCAT(u.first_name, ' ', u.last_name) as uploaded_by_name,
                     CONCAT(ur.first_name, ' ', ur.last_name) as received_by_name,
                     (SELECT COUNT(*) FROM physical_file_movements WHERE file_id = f.file_id) as movement_count
-                FROM files f
+                FROM files2 f
                 LEFT JOIN file_categories fc ON f.category_id = fc.category_id
-                LEFT JOIN departments d_source ON f.source_department_id = d_source.department_id
-                LEFT JOIN departments d_dest ON f.destination_department_id = d_dest.department_id
+                LEFT JOIN departments d_source ON f.Department = d_source.department_id
+                LEFT JOIN departments d_dest ON f.Destination = d_dest.department_id
                 LEFT JOIN users u ON f.uploaded_by = u.user_id
                 LEFT JOIN users ur ON f.received_by = ur.user_id
                 WHERE f.file_id = :file_id
@@ -275,7 +289,7 @@ public function uploadFile($fileData, $uploadedBy) {
         $uploaderName = $uploader ? $uploader['first_name'] . ' ' . $uploader['last_name'] : 'Unknown';
         
         // Notify department head about new file
-        $departmentHead = $this->getDepartmentHead($fileData['source_department_id']);
+        $departmentHead = $this->getDepartmentHead($fileData['department']);
         if ($departmentHead) {
             $notificationData = [
                 'recipient_id' => $departmentHead['user_id'],
@@ -298,11 +312,11 @@ public function uploadFile($fileData, $uploadedBy) {
                         'head_name' => $departmentHead['first_name'] . ' ' . $departmentHead['last_name'],
                         'uploader_name' => $uploaderName,
                         'file_name' => $fileData['original_name'],
-                        'reference_number' => $fileData['reference_number'],
+                        'reference_number' => $fileData['reference_no'],
                         'file_type' => $fileData['is_physical'] ? 'Physical Document' : $fileData['file_type'],
                         'file_size' => $fileData['is_physical'] ? 'N/A' : $this->formatFileSize($fileData['file_size']),
                         'upload_date' => date('Y-m-d H:i'),
-                        'department' => $this->getDepartmentName($fileData['source_department_id']),
+                        'department' => $this->getDepartmentName($fileData['department']),
                         'file_link' => $_ENV['APP_URL'] . '/files/view/' . $fileId
                     ]
                 ];
@@ -324,10 +338,10 @@ public function uploadFile($fileData, $uploadedBy) {
                 'data' => [
                     'user_name' => $uploaderName,
                     'file_name' => $fileData['original_name'],
-                    'reference_number' => $fileData['reference_number'],
+                    'reference_number' => $fileData['reference_no'],
                     'date' => date('Y-m-d H:i'),
                     'file_link' => $_ENV['APP_URL'] . '/files/view/' . $fileId,
-                    'department' => $this->getDepartmentName($fileData['source_department_id'])
+                    'department' => $this->getDepartmentName($fileData['department'])
                 ]
             ];
             $this->mail->send($uploaderEmailData);
@@ -367,7 +381,7 @@ public function uploadFile($fileData, $uploadedBy) {
                 'data' => [
                     'head_name' => $toDeptHead['first_name'] . ' ' . $toDeptHead['last_name'],
                     'file_name' => $file['original_name'],
-                    'reference_number' => $file['reference_number'],
+                    'reference_number' => $file['reference_no'],
                     'from_source' => $fromDept ? $fromDept['department_name'] : 'External',
                     'received_by' => $moverName,
                     'receive_date' => date('Y-m-d H:i'),
@@ -474,7 +488,7 @@ public function uploadFile($fileData, $uploadedBy) {
             ");
             $stmt->bindParam(':file_id', $fileId);
             $stmt->bindParam(':shared_by', $sharedBy);
-            $stmt->bindParam(':from_dept', $file['source_department_id']);
+            $stmt->bindParam(':from_dept', $file['Department']);
             $stmt->bindParam(':to_dept', $toDepartmentId);
             $stmt->bindParam(':message', $message);
             $stmt->execute();
@@ -492,7 +506,7 @@ public function uploadFile($fileData, $uploadedBy) {
             
             // Get department head and source department info
             $departmentHead = $this->getDepartmentHead($toDepartmentId);
-            $sourceDept = $this->getDepartmentName($file['source_department_id']);
+            $sourceDept = $this->getDepartmentName($file['Department']);
             $sharer = $this->getUserById($sharedBy);
             $sharerName = $sharer ? $sharer['first_name'] . ' ' . $sharer['last_name'] : 'Unknown';
             
@@ -528,7 +542,7 @@ public function uploadFile($fileData, $uploadedBy) {
                 $this->mail->send($emailData);
             }
             
-            $sourceDeptHead = $this->getDepartmentHead($file['source_department_id']);
+            $sourceDeptHead = $this->getDepartmentHead($file['Department']);
             if ($sourceDeptHead && $sourceDeptHead['user_id'] != $sharedBy) {
                 $notificationData = [
                     'recipient_id' => $sourceDeptHead['user_id'],
@@ -756,14 +770,14 @@ public function uploadFile($fileData, $uploadedBy) {
                         'change_date' => date('Y-m-d H:i'),
                         'comments' => $comments ?: 'No additional comments provided',
                         'file_link' => $_ENV['APP_URL'] . '/files/view/' . $file['file_id'],
-                        'department' => $file['source_department']
+                        'department' => $file['Department']
                     ]
                 ];
                 $this->mail->send($emailData);
             }
             
             // Notify the file uploader if they're in a different department
-            if ($file['uploaded_by'] != $userId && $file['source_department_id'] != $departmentId) {
+            if ($file['uploaded_by'] != $userId && $file['Department'] != $departmentId) {
                 $uploader = $this->getUserById($file['uploaded_by']);
                 if ($uploader) {
                     // In-app notification
@@ -790,7 +804,7 @@ public function uploadFile($fileData, $uploadedBy) {
                             'change_date' => date('Y-m-d H:i'),
                             'comments' => $comments ?: 'No additional comments provided',
                             'file_link' => $_ENV['APP_URL'] . '/files/view/' . $file['file_id'],
-                            'department' => $file['source_department']
+                            'department' => $file['Department']
                         ]
                     ];
                     $this->mail->send($emailData);
@@ -811,10 +825,10 @@ public function uploadFile($fileData, $uploadedBy) {
         $stmt = $conn->prepare("
             SELECT 
                 f.*, 
-                d.department_name as source_department,
-                d.department_id as source_department_id
-            FROM files f
-            LEFT JOIN departments d ON f.source_department_id = d.department_id
+                d.department_name as Department,
+                d.department_id as Department_id
+            FROM files2 f
+            LEFT JOIN departments d ON f.Department = d.department_id
             WHERE f.file_id = :file_id
         ");
         $stmt->bindParam(':file_id', $fileId);
@@ -834,11 +848,11 @@ public function uploadFile($fileData, $uploadedBy) {
                 SELECT 
                     f.*, 
                     fc.category_name,
-                    d.department_name as source_department,
+                    d.department_name as Department,
                     CONCAT(u.first_name, ' ', u.last_name) as uploaded_by_name
-                FROM files f
+                FROM files2 f
                 LEFT JOIN file_categories fc ON f.category_id = fc.category_id
-                LEFT JOIN departments d ON f.source_department_id = d.department_id
+                LEFT JOIN departments d ON f.Department = d.department_id
                 LEFT JOIN users u ON f.uploaded_by = u.user_id
                 WHERE f.file_id = :file_id
             ");
@@ -869,7 +883,7 @@ public function uploadFile($fileData, $uploadedBy) {
                 SELECT 
                     f.file_id, f.original_name, f.file_name, f.file_path,
                     f.file_size, f.file_type, f.upload_date, f.received_at,
-                    f.is_physical, f.reference_number,
+                    f.is_physical, f.reference_no,
                     fc.category_name,
                     d_source.department_name as source_department,
                     d_dest.department_name as destination_department,
@@ -877,10 +891,10 @@ public function uploadFile($fileData, $uploadedBy) {
                     COUNT(DISTINCT fs.share_id) as share_count,
                     GROUP_CONCAT(DISTINCT ws.status_name ORDER BY fa.created_at DESC SEPARATOR ', ') as workflow_statuses,
                     (SELECT COUNT(*) FROM physical_file_movements WHERE file_id = f.file_id) as movement_count
-                FROM files f
+                FROM files2 f
                 LEFT JOIN file_categories fc ON f.category_id = fc.category_id
-                LEFT JOIN departments d_source ON f.source_department_id = d_source.department_id
-                LEFT JOIN departments d_dest ON f.destination_department_id = d_dest.department_id
+                LEFT JOIN departments d_source ON f.Department = d_source.department_id
+                LEFT JOIN departments d_dest ON f.Destination = d_dest.department_id
                 LEFT JOIN users u ON f.uploaded_by = u.user_id
                 LEFT JOIN file_shares fs ON f.file_id = fs.file_id AND fs.is_active = TRUE
                 LEFT JOIN file_approvals fa ON f.file_id = fa.file_id
@@ -893,12 +907,12 @@ public function uploadFile($fileData, $uploadedBy) {
             
             if (!empty($filters['search'])) {
                 $search = "%{$filters['search']}%";
-                $where[] = "(f.original_name LIKE :search OR f.description LIKE :search OR f.reference_number LIKE :search)";
+                $where[] = "(f.original_name LIKE :search OR f.description LIKE :search OR f.reference_no LIKE :search)";
                 $params[':search'] = $search;
             }
             
             if (!empty($filters['department_id'])) {
-                $where[] = "f.source_department_id = :department_id";
+                $where[] = "f.Department = :department_id";
                 $params[':department_id'] = $filters['department_id'];
             }
             
@@ -928,7 +942,7 @@ public function uploadFile($fileData, $uploadedBy) {
             }
             
             if (!empty($filters['reference_number'])) {
-                $where[] = "f.reference_number = :reference_number";
+                $where[] = "f.reference_no = :reference_number";
                 $params[':reference_number'] = $filters['reference_number'];
             }
             
@@ -963,7 +977,7 @@ public function uploadFile($fileData, $uploadedBy) {
             // Get total count for pagination
             $countQuery = "
                 SELECT COUNT(DISTINCT f.file_id) as total 
-                FROM files f
+                FROM files2 f
                 LEFT JOIN file_approvals fa ON f.file_id = fa.file_id
             ";
             
@@ -1075,9 +1089,9 @@ public function uploadFile($fileData, $uploadedBy) {
                     CONCAT(us.first_name, ' ', us.last_name) as shared_by_name,
                     ws.status_name as current_status
                 FROM file_shares fs
-                JOIN files f ON fs.file_id = f.file_id
+                JOIN files2 f ON fs.file_id = f.file_id
                 LEFT JOIN file_categories fc ON f.category_id = fc.category_id
-                LEFT JOIN departments d ON f.source_department_id = d.department_id
+                LEFT JOIN departments d ON f.Department = d.department_id
                 LEFT JOIN users u ON f.uploaded_by = u.user_id
                 LEFT JOIN users us ON fs.shared_by = us.user_id
                 LEFT JOIN file_approvals fa ON f.file_id = fa.file_id AND fa.department_id = :department_id
@@ -1128,7 +1142,7 @@ public function uploadFile($fileData, $uploadedBy) {
             $countQuery = "
                 SELECT COUNT(*) as total 
                 FROM file_shares fs
-                JOIN files f ON fs.file_id = f.file_id
+                JOIN files2 f ON fs.file_id = f.file_id
                 WHERE fs.shared_to_dept = :department_id
                 AND fs.is_active = TRUE
             ";
@@ -1187,7 +1201,7 @@ public function uploadFile($fileData, $uploadedBy) {
             
             // Delete the file record
             $stmt = $conn->prepare("
-                DELETE FROM files 
+                DELETE FROM files2 
                 WHERE file_id = :file_id
             ");
             $stmt->bindParam(':file_id', $fileId);
@@ -1371,7 +1385,7 @@ public function uploadFile($fileData, $uploadedBy) {
             $stmt = $conn->prepare("
                 SELECT DISTINCT u.user_id
                 FROM (
-                    SELECT uploaded_by as user_id FROM files WHERE file_id = :file_id
+                    SELECT uploaded_by as user_id FROM files2 WHERE file_id = :file_id
                     UNION
                     SELECT shared_by as user_id FROM file_shares WHERE file_id = :file_id
                     UNION

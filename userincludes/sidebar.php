@@ -13,30 +13,34 @@
         <ul class="space-y-2">
             <?php foreach ($menus as $key => $menu): ?>
                 <?php if ($menu['permission']): ?>
-                    <li>
-                        <a href="<?php echo $menu['url']; ?>" 
-                        class="flex items-center p-3 rounded-lg hover:bg-primary-50 dark:hover:bg-gray-700 group <?php echo ($currentPage === basename($menu['url'])) ? 'bg-primary-50 dark:bg-gray-700 text-primary-600 dark:text-primary-400' : 'text-gray-700 dark:text-gray-300'; ?>"
-                        <?php if (isset($menu['attributes'])): ?>
-                            <?php foreach ($menu['attributes'] as $attr => $value): ?>
-                                <?php echo $attr . '="' . $value . '" '; ?>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
-                        >
-                            <i class="<?php echo $menu['icon']; ?> mr-3 <?php echo ($currentPage === basename($menu['url'])) ? 'text-primary-600 dark:text-primary-400' : 'text-gray-500 dark:text-gray-400 group-hover:text-primary-600 dark:group-hover:text-primary-400'; ?>"></i>
-                            <span><?php echo $menu['title']; ?></span>
-                        </a>
-                        
-                        <?php if (isset($menu['submenus'])): ?>
-                            <ul class="pl-4 mt-1 space-y-1">
-                                <?php foreach ($menu['submenus'] as $subkey => $submenu): ?>
-                                    <li>
-                                        <a href="<?php echo $submenu['url']; ?>" class="flex items-center p-2 rounded-lg hover:bg-primary-50 dark:hover:bg-gray-700 group <?php echo ($currentPage === basename($submenu['url'])) ? 'text-primary-600 dark:text-primary-400' : 'text-gray-600 dark:text-gray-400'; ?>">
-                                            <span class="text-sm"><?php echo $submenu['title']; ?></span>
-                                        </a>
-                                    </li>
+                    <li class="relative">
+                        <div class="flex flex-col">
+                            <a href="<?php echo $menu['url']; ?>" 
+                            class="flex items-center p-3 rounded-lg hover:bg-primary-50 dark:hover:bg-gray-700 group <?php echo ($currentPage === basename($menu['url'])) ? 'bg-primary-50 dark:bg-gray-700 text-primary-600 dark:text-primary-400' : 'text-gray-700 dark:text-gray-300'; ?>"
+                            <?php if (isset($menu['attributes'])): ?>
+                                <?php foreach ($menu['attributes'] as $attr => $value): ?>
+                                    <?php echo $attr . '="' . $value . '" '; ?>
                                 <?php endforeach; ?>
-                            </ul>
-                        <?php endif; ?>
+                            <?php endif; ?>
+                            >
+                                <i class="<?php echo $menu['icon']; ?> mr-3 <?php echo ($currentPage === basename($menu['url'])) ? 'text-primary-600 dark:text-primary-400' : 'text-gray-500 dark:text-gray-400 group-hover:text-primary-600 dark:group-hover:text-primary-400'; ?>"></i>
+                                <span><?php echo $menu['title']; ?></span>
+                            </a>
+                            
+                            <?php if (isset($menu['submenus'])): ?>
+                                <div class="pl-4 mt-1 space-y-1 submenu-container" data-menu="<?php echo $key; ?>">
+                                    <ul class="space-y-1">
+                                        <?php foreach ($menu['submenus'] as $subkey => $submenu): ?>
+                                            <li>
+                                                <a href="<?php echo $submenu['url']; ?>" class="flex items-center p-2 rounded-lg hover:bg-primary-50 dark:hover:bg-gray-700 group <?php echo ($currentPage === basename($submenu['url'])) ? 'text-primary-600 dark:text-primary-400' : 'text-gray-600 dark:text-gray-400'; ?>">
+                                                    <span class="text-sm"><?php echo $submenu['title']; ?></span>
+                                                </a>
+                                            </li>
+                                        <?php endforeach; ?>
+                                    </ul>
+                                </div>
+                            <?php endif; ?>
+                        </div>
                     </li>
                 <?php endif; ?>
             <?php endforeach; ?>
@@ -60,4 +64,49 @@
             </button>
         </div>
     </div>
+
+    <script>
+        // Initialize submenu states
+        const submenus = document.querySelectorAll('.submenu-container');
+        submenus.forEach(submenu => {
+            const menuKey = submenu.dataset.menu;
+            // Check if current page is in submenu
+            const currentPage = window.location.pathname.split('/').pop();
+            const submenuLinks = submenu.querySelectorAll('a');
+            const isCurrentPageInSubmenu = Array.from(submenuLinks).some(link => link.pathname.split('/').pop() === currentPage);
+            
+            if (isCurrentPageInSubmenu) {
+                submenu.style.display = 'block';
+            } else {
+                submenu.style.display = 'none';
+            }
+        });
+
+        // Add click handlers to menu items with submenus
+        document.querySelectorAll('li').forEach(li => {
+            const submenu = li.querySelector('.submenu-container');
+            if (submenu) {
+                // Add click handler to the main menu link
+                const mainLink = li.querySelector('a');
+                mainLink.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    // Toggle submenu
+                    submenu.style.display = submenu.style.display === 'none' ? 'block' : 'none';
+                });
+            }
+        });
+
+        // Make all menu links clickable
+        document.querySelectorAll('li a').forEach(link => {
+            link.addEventListener('click', (e) => {
+                // Only prevent default if this link has a submenu
+                const submenu = e.currentTarget.closest('li').querySelector('.submenu-container');
+                if (!submenu) {
+                    e.preventDefault();
+                    // Navigate to the page
+                    window.location.href = e.currentTarget.href;
+                }
+            });
+        });
+    </script>
 </aside>
