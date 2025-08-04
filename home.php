@@ -280,7 +280,7 @@ $dashboardData = $dashboard->getDashboardData($currentUser['user_id']);
                                                                 <i class="fas fa-file"></i>
                                                             </div>
                                                             <div class="ml-4">
-                                                                <div class="text-sm font-medium text-gray-800 dark:text-white"><?php echo htmlspecialchars($file['original_name']); ?></div>
+                                                                <div class="text-sm font-medium text-gray-800 dark:text-white"><?php echo htmlspecialchars($file['file_name']); ?></div>
                                                                 <div class="text-sm text-gray-500 dark:text-gray-400"><?php echo htmlspecialchars($file['uploaded_by']); ?></div>
                                                             </div>
                                                         </div>
@@ -321,7 +321,7 @@ $dashboardData = $dashboard->getDashboardData($currentUser['user_id']);
                                                     </div>
                                                     <div class="ml-4 flex-1">
                                                         <div class="flex items-center justify-between">
-                                                            <h4 class="text-sm font-medium text-gray-800 dark:text-white"><?php echo htmlspecialchars($approval['original_name']); ?></h4>
+                                                            <h4 class="text-sm font-medium text-gray-800 dark:text-white"><?php echo htmlspecialchars($approval['file_name']); ?></h4>
                                                             <span class="text-xs text-gray-500 dark:text-gray-400"><?php echo formatDate($approval['request_date']); ?></span>
                                                         </div>
                                                         <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">From: <?php echo htmlspecialchars($approval['source_department']); ?></p>
@@ -427,7 +427,7 @@ $dashboardData = $dashboard->getDashboardData($currentUser['user_id']);
                                                 </div>
                                                 <div class="ml-4 flex-1">
                                                     <div class="flex items-center justify-between">
-                                                        <h4 class="text-sm font-medium text-gray-800 dark:text-white"><?php echo htmlspecialchars($file['original_name']); ?></h4>
+                                                        <h4 class="text-sm font-medium text-gray-800 dark:text-white"><?php echo htmlspecialchars($file['file_name']); ?></h4>
                                                         <span class="text-xs text-gray-500 dark:text-gray-400"><?php echo formatDate($file['upload_date']); ?></span>
                                                     </div>
                                                     <p class="text-sm text-gray-600 dark:text-gray-400 mt-1"><?php echo htmlspecialchars($file['category_name']); ?></p>
@@ -469,7 +469,7 @@ $dashboardData = $dashboard->getDashboardData($currentUser['user_id']);
                                                     </div>
                                                     <div class="ml-4 flex-1">
                                                         <div class="flex items-center justify-between">
-                                                            <h4 class="text-sm font-medium text-gray-800 dark:text-white"><?php echo htmlspecialchars($file['original_name']); ?></h4>
+                                                            <h4 class="text-sm font-medium text-gray-800 dark:text-white"><?php echo htmlspecialchars($file['file_name']); ?></h4>
                                                             <span class="text-xs text-gray-500 dark:text-gray-400"><?php echo formatDate($file['share_date']); ?></span>
                                                         </div>
                                                         <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">From: <?php echo htmlspecialchars($file['shared_from']); ?></p>
