@@ -9,9 +9,10 @@ class FileActions {
     private $notification;
 
     public function __construct() {
-        $this->db = new Database();
-        $this->notification = new Notification();
-    }
+    $this->db = new Database();
+    $this->notification = new Notification();
+    $this->mail = new Mail();
+}
 
 
     /**
