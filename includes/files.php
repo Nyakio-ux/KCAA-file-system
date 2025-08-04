@@ -83,6 +83,7 @@ class FileActions {
 
    /**
      * Upload a new file with metadata and provide detailed notification feedback
+     * Includes duplicate check based on reference number
      */
     public function uploadFile($fileData, $uploadedBy) {
         $maxRetries = 10;
@@ -100,6 +101,17 @@ class FileActions {
                         error_log("Missing required field: $field");
                         return ['success' => false, 'message' => "Required field '$field' is missing"];
                     }
+                }
+                
+                // Check for duplicate reference number
+                $duplicateCheck = $this->checkDuplicateReference($fileData['reference_no'], $fileData['department']);
+                if ($duplicateCheck['exists']) {
+                    error_log("Duplicate reference number found: {$fileData['reference_no']}");
+                    return [
+                        'success' => false, 
+                        'message' => "A file with reference number '{$fileData['reference_no']}' already exists in the system.",
+                        'duplicate_info' => $duplicateCheck
+                    ];
                 }
                 
                 // For digital files, validate file path and size
@@ -234,9 +246,63 @@ class FileActions {
         return ['success' => false, 'message' => 'Upload failed after multiple attempts'];
     }
 
-
-
-
+    /**
+     * Check if a file with the same reference number already exists
+     */
+    private function checkDuplicateReference($referenceNo, $departmentId = null) {
+        try {
+            $conn = $this->db->connect();
+            
+            // Check for exact reference number match
+            if ($departmentId) {
+                // Check within the same department
+                $stmt = $conn->prepare("
+                    SELECT file_id, file_name, original_name, upload_date, 
+                        uploaded_by, source_department_id, is_physical
+                    FROM files 
+                    WHERE reference_number = :reference_no 
+                    AND source_department_id = :department_id
+                    LIMIT 1
+                ");
+                $stmt->bindValue(':reference_no', $referenceNo);
+                $stmt->bindValue(':department_id', $departmentId);
+            } else {
+                // Check globally across all departments
+                $stmt = $conn->prepare("
+                    SELECT file_id, file_name, original_name, upload_date, 
+                        uploaded_by, source_department_id, is_physical
+                    FROM files 
+                    WHERE reference_number = :reference_no
+                    LIMIT 1
+                ");
+                $stmt->bindValue(':reference_no', $referenceNo);
+            }
+            
+            $stmt->execute();
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($result) {
+                error_log("Duplicate reference found: " . json_encode($result));
+                return [
+                    'exists' => true,
+                    'file_id' => $result['file_id'],
+                    'file_name' => $result['file_name'],
+                    'original_name' => $result['original_name'],
+                    'upload_date' => $result['upload_date'],
+                    'uploaded_by' => $result['uploaded_by'],
+                    'department_id' => $result['source_department_id'],
+                    'is_physical' => $result['is_physical']
+                ];
+            }
+            
+            return ['exists' => false];
+            
+        } catch (Exception $e) {
+            error_log("Error checking duplicate reference: " . $e->getMessage());
+            // In case of error, allow the upload to proceed (conservative approach)
+            return ['exists' => false, 'error' => $e->getMessage()];
+        }
+    }
 
 
     /**
