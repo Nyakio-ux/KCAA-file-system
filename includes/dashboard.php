@@ -58,7 +58,9 @@ class Dashboard {
             if (!$user) {
                 return ['success' => false, 'message' => 'User not found'];
             }
-            
+
+            $dashboardData['department_files'] = $this->getDepartmentFilesWithStatuses($user['department_id']);
+
             $roleId = $user['role_id'] ?? null;
             $departmentId = $user['department_id'] ?? null;
             
@@ -77,6 +79,51 @@ class Dashboard {
             return ['success' => false, 'message' => 'Failed to load dashboard data'];
         }
     }
+
+
+    private function getDepartmentFilesWithStatuses($departmentId) {
+    try {
+        $conn = $this->db->connect();
+        
+        $stmt = $conn->prepare("
+            SELECT 
+                f.file_id, 
+                f.original_name,
+                f.upload_date,
+                CONCAT(u.first_name, ' ', u.last_name) as uploaded_by,
+                COALESCE(
+                    GROUP_CONCAT(DISTINCT ws.status_name ORDER BY fa.created_at DESC SEPARATOR ', '),
+                    'No Status'
+                ) as all_statuses,
+                COALESCE(
+                    (
+                        SELECT ws.status_name 
+                        FROM file_approvals fa
+                        JOIN workflow_statuses ws ON fa.status_id = ws.status_id
+                        WHERE fa.file_id = f.file_id
+                        ORDER BY fa.created_at DESC
+                        LIMIT 1
+                    ),
+                    'No Status'
+                ) as current_status
+            FROM files f
+            JOIN users u ON f.uploaded_by = u.user_id
+            LEFT JOIN file_approvals fa ON f.file_id = fa.file_id
+            LEFT JOIN workflow_statuses ws ON fa.status_id = ws.status_id
+            WHERE f.department = :department_id
+            GROUP BY f.file_id
+            ORDER BY f.upload_date DESC
+            LIMIT 5
+        ");
+        $stmt->bindParam(':department_id', $departmentId);
+        $stmt->execute();
+        
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        error_log("Get department files error: " . $e->getMessage());
+        return [];
+    }
+}
     
     /**
      * Get admin dashboard data

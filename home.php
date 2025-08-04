@@ -258,6 +258,7 @@ $dashboardData = $dashboard->getDashboardData($currentUser['user_id']);
                         <!-- Department Files and Pending Approvals -->
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                             <!-- Department Files -->
+                            <!-- Department Files -->
                             <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
                                 <div class="border-b border-gray-200 dark:border-gray-700 px-6 py-4">
                                     <h3 class="font-semibold text-gray-800 dark:text-white">Recent Department Files</h3>
@@ -267,8 +268,9 @@ $dashboardData = $dashboard->getDashboardData($currentUser['user_id']);
                                         <thead class="bg-gray-50 dark:bg-gray-700">
                                             <tr>
                                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">File Name</th>
-                                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Category</th>
-                                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
+                                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Uploaded By</th>
+                                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Current Status</th>
+                                                <!-- <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">All Statuses</th> -->
                                             </tr>
                                         </thead>
                                         <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
@@ -281,16 +283,27 @@ $dashboardData = $dashboard->getDashboardData($currentUser['user_id']);
                                                             </div>
                                                             <div class="ml-4">
                                                                 <div class="text-sm font-medium text-gray-800 dark:text-white"><?php echo htmlspecialchars($file['file_name']); ?></div>
-                                                                <div class="text-sm text-gray-500 dark:text-gray-400"><?php echo htmlspecialchars($file['uploaded_by']); ?></div>
+                                                                <div class="text-sm text-gray-500 dark:text-gray-400"><?php echo formatDate($file['upload_date']); ?></div>
                                                             </div>
                                                         </div>
                                                     </td>
-                                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400"><?php echo htmlspecialchars($file['category_name']); ?></td>
-                                                    <td class="px-6 py-4 whitespace-nowrap">
-                                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-<?php echo getStatusBadge($file['current_status']); ?>-100 dark:bg-<?php echo getStatusBadge($file['current_status']); ?>-900 text-<?php echo getStatusBadge($file['current_status']); ?>-800 dark:text-<?php echo getStatusBadge($file['current_status']); ?>-300">
-                                                            <?php echo $file['current_status']; ?>
-                                                        </span>
+                                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
+                                                        <?php echo htmlspecialchars($file['uploaded_by']); ?>
                                                     </td>
+                                                    <td class="px-6 py-4 whitespace-nowrap">
+                                                        <?php if (!empty($file['current_status']) && $file['current_status'] !== 'No Status'): ?>
+                                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-<?php echo getStatusBadge($file['current_status']); ?>-100 dark:bg-<?php echo getStatusBadge($file['current_status']); ?>-900 text-<?php echo getStatusBadge($file['current_status']); ?>-800 dark:text-<?php echo getStatusBadge($file['current_status']); ?>-300">
+                                                                <?php echo $file['current_status']; ?>
+                                                            </span>
+                                                        <?php else: ?>
+                                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-300">
+                                                                No Status
+                                                            </span>
+                                                        <?php endif; ?>
+                                                    </td>
+                                                    <!-- <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
+                                                        <?php echo htmlspecialchars($file['all_statuses']); ?>
+                                                    </td> -->
                                                 </tr>
                                             <?php endforeach; ?>
                                         </tbody>
