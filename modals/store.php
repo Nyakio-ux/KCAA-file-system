@@ -1,3 +1,4 @@
+
 <!-- modals/uploadModal.php -->
 <div class="modal fade fixed top-0 left-0 hidden w-full h-full outline-none overflow-x-hidden overflow-y-auto z-50" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true" style="display: none;">
     <div class="modal-dialog relative w-auto pointer-events-none mx-auto mt-4 mb-4 px-4 max-w-xs sm:max-w-sm md:max-w-md lg:max-w-2xl xl:max-w-4xl">
@@ -14,7 +15,9 @@
             
             <!-- Modal body -->
             <div class="modal-body relative p-4 sm:p-6 max-h-[70vh] overflow-y-auto">
-                <form id="uploadForm" method="POST" action="api/files" enctype="multipart/form-data">
+                <form id="uploadForm" method="POST" action="process_file.php" enctype="multipart/form-data">
+                    <input type="hidden" name="action" value="register_file">
+                    
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                         <!-- Left Column -->
                         <div class="space-y-4">
@@ -35,7 +38,16 @@
                                 <label for="department" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Department*</label>
                                 <select id="department" name="department" required class="w-full px-3 sm:px-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
                                     <option value="">Select Department</option>
-                                    <!-- Departments will be populated via JavaScript -->
+                                    <?php
+                                    // Directly include department options from database
+                                    require_once 'includes/database.php';
+                                    $db = new Database();
+                                    $conn = $db->connect();
+                                    $stmt = $conn->query("SELECT department_id, department_name FROM departments");
+                                    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                                        echo '<option value="' . htmlspecialchars($row['department_id']) . '">' . htmlspecialchars($row['department_name']) . '</option>';
+                                    }
+                                    ?>
                                 </select>
                             </div>
                             
@@ -59,7 +71,12 @@
                                 <label for="destination" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Destination*</label>
                                 <select id="destination" name="destination" required class="w-full px-3 sm:px-4 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:text-white">
                                     <option value="">Select Destination</option>
-                                    <!-- Destinations will be populated via JavaScript -->
+                                    <?php
+                                    $stmt = $conn->query("SELECT department_id, department_name FROM departments");
+                                    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                                        echo '<option value="' . htmlspecialchars($row['department_id']) . '">' . htmlspecialchars($row['department_name']) . '</option>';
+                                    }
+                                    ?>
                                 </select>
                             </div>
                             
@@ -72,7 +89,7 @@
                             <!-- Confidentiality -->
                             <div>
                                 <label class="flex items-center space-x-2">
-                                    <input type="checkbox" id="is_confidential" name="is_confidential" class="rounded border-gray-300 text-primary-600 shadow-sm focus:border-primary-300 focus:ring focus:ring-primary-200 focus:ring-opacity-50">
+                                    <input type="checkbox" id="is_confidential" name="is_confidential" value="1" class="rounded border-gray-300 text-primary-600 shadow-sm focus:border-primary-300 focus:ring focus:ring-primary-200 focus:ring-opacity-50">
                                     <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Confidential Document</span>
                                 </label>
                             </div>
@@ -115,8 +132,7 @@
                         </div>
                     </div>
                     
-                    <!-- Form submission feedback -->
-                    <div id="uploadFeedback" class="hidden mt-4 p-4 rounded-md"></div>
+                    <!-- Form submission feedback will be shown after page reload -->
                 </form>
             </div>
             
@@ -137,308 +153,60 @@
 </div>
 
 <script>
-$(document).ready(function() {
-    console.log('Upload modal script initialized');
-
-    // Populate department dropdowns
-    function populateDropdown(selector, data, placeholder) {
-        const select = $(selector);
-        select.empty();
-        select.append($('<option>', {
-            value: '',
-            text: placeholder
-        }));
-        $.each(data, function(index, item) {
-            select.append($('<option>', {
-                value: item.department_id,
-                text: item.department_name
-            }));
-        });
-    }
-
-    // Load departments from API
-    function loadDepartments() {
-        console.log('Loading departments...');
-        $.ajax({
-            url: 'api/departments',
-            type: 'GET',
-            dataType: 'json',
-            success: function(data) {
-                console.log('Departments loaded:', data);
-                if (data.success && data.departments) {
-                    populateDropdown('#department', data.departments, 'Select Department');
-                    populateDropdown('#destination', data.departments, 'Select Destination');
-                } else {
-                    console.error('Failed to load departments - invalid response');
-                    showDropdownError();
-                }
-            },
-            error: function(xhr, status, error) {
-                console.error('Failed to load departments:', error);
-                showDropdownError();
-            }
-        });
-    }
-
-    function showDropdownError() {
-        $('#department').append($('<option>', {
-            value: '',
-            text: 'Error loading departments'
-        }));
-        $('#destination').append($('<option>', {
-            value: '',
-            text: 'Error loading destinations'
-        }));
-    }
-
-    // Load departments on page load
-    loadDepartments();
-
-    // Handle file selection preview
-    $('#file').on('change', function(e) {
-        console.log('File selected:', e.target.files);
+// Client-side functionality for file preview and drag/drop
+document.addEventListener('DOMContentLoaded', function() {
+    // File selection preview
+    document.getElementById('file').addEventListener('change', function(e) {
         const file = e.target.files[0];
         if (file) {
-            $('#fileName').text(file.name);
-            $('#filePreview').removeClass('hidden');
+            document.getElementById('fileName').textContent = file.name;
+            document.getElementById('filePreview').classList.remove('hidden');
         } else {
-            $('#filePreview').addClass('hidden');
+            document.getElementById('filePreview').classList.add('hidden');
         }
     });
 
     // Remove file
-    $('#removeFile').on('click', function() {
-        console.log('Removing file');
-        $('#file').val('');
-        $('#filePreview').addClass('hidden');
+    document.getElementById('removeFile').addEventListener('click', function() {
+        document.getElementById('file').value = '';
+        document.getElementById('filePreview').classList.add('hidden');
     });
 
     // Drag and drop functionality
-    const dropArea = $('#dropArea');
+    const dropArea = document.getElementById('dropArea');
     
     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-        dropArea.on(eventName, function(e) {
+        dropArea.addEventListener(eventName, function(e) {
             e.preventDefault();
             e.stopPropagation();
         });
     });
 
     ['dragenter', 'dragover'].forEach(eventName => {
-        dropArea.on(eventName, function() {
-            $(this).addClass('border-primary-500 bg-primary-50 dark:bg-primary-900 bg-opacity-50');
+        dropArea.addEventListener(eventName, function() {
+            this.classList.add('border-primary-500', 'bg-primary-50', 'dark:bg-primary-900', 'bg-opacity-50');
         });
     });
 
     ['dragleave', 'drop'].forEach(eventName => {
-        dropArea.on(eventName, function() {
-            $(this).removeClass('border-primary-500 bg-primary-50 dark:bg-primary-900 bg-opacity-50');
+        dropArea.addEventListener(eventName, function() {
+            this.classList.remove('border-primary-500', 'bg-primary-50', 'dark:bg-primary-900', 'bg-opacity-50');
         });
     });
 
     // Handle dropped files
-    dropArea.on('drop', function(e) {
-        const dt = e.originalEvent.dataTransfer;
+    dropArea.addEventListener('drop', function(e) {
+        const dt = e.dataTransfer;
         const files = dt.files;
         
         if (files.length) {
-            console.log('Files dropped:', files);
-            $('#file')[0].files = files;
-            $('#fileName').text(files[0].name);
-            $('#filePreview').removeClass('hidden');
+            document.getElementById('file').files = files;
+            document.getElementById('fileName').textContent = files[0].name;
+            document.getElementById('filePreview').classList.remove('hidden');
         }
-    });
-
-    // Client-side form validation
-    function validateForm(formData) {
-        const requiredFields = [
-            { name: 'file_name', label: 'File Name' },
-            { name: 'reference_no', label: 'Reference Number' },
-            { name: 'department', label: 'Department' },
-            { name: 'originator', label: 'Originator' },
-            { name: 'receiver', label: 'Receiver' },
-            { name: 'date_of_origination', label: 'Date of Origination' },
-            { name: 'destination', label: 'Destination' }
-        ];
-
-        let missingFields = [];
-        
-        for (let field of requiredFields) {
-            const value = formData.get(field.name);
-            if (!value || (typeof value === 'string' && value.trim() === '')) {
-                missingFields.push(field.label);
-            }
-        }
-        
-        return missingFields;
-    }
-
-    function showFeedback(message, isError = false) {
-        const feedback = $('#uploadFeedback');
-        feedback.removeClass('hidden bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-300 bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-300');
-        
-        if (isError) {
-            feedback.addClass('bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-300');
-        } else {
-            feedback.addClass('bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-300');
-        }
-        
-        feedback.html(message);
-    }
-
-    function setLoadingState(loading) {
-        const submitBtn = $('#submitButton');
-        const submitText = $('#submitText');
-        const spinner = $('#spinner');
-        
-        if (loading) {
-            submitText.text('Processing...');
-            spinner.removeClass('hidden');
-            submitBtn.prop('disabled', true);
-        } else {
-            submitText.text('Register File');
-            spinner.addClass('hidden');
-            submitBtn.prop('disabled', false);
-        }
-    }
-
-    // Enhanced form submission handler with better debugging
-    $('#uploadForm').on('submit', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        console.log('Form submission started');
-        console.log('Current URL:', window.location.href);
-        console.log('Form action:', $(this).attr('action'));
-        
-        const form = this;
-        const formData = new FormData(form);
-        
-        // Debug: Log all form data
-        console.log('Form data contents:');
-        for (let [key, value] of formData.entries()) {
-            console.log(`${key}:`, value);
-        }
-        
-        // Client-side validation
-        const missingFields = validateForm(formData);
-        if (missingFields.length > 0) {
-            showFeedback('Please fill in all required fields: ' + missingFields.join(', '), true);
-            return;
-        }
-        
-        // Show loading state
-        setLoadingState(true);
-        $('#uploadFeedback').addClass('hidden');
-        const apiUrl = 'api/files'; 
-        console.log('Making request to:', apiUrl);
-        console.log('Request method: POST');
-        
-        // Submit form via AJAX with enhanced debugging
-        $.ajax({
-            url: apiUrl,
-            type: 'POST',
-            method: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
-            cache: false,
-            dataType: 'json',
-            timeout: 30000,
-            beforeSend: function(xhr, settings) {
-                console.log('AJAX Request Details:');
-                console.log('URL:', settings.url);
-                console.log('Type:', settings.type);
-                console.log('Method:', settings.method);
-                console.log('ProcessData:', settings.processData);
-                console.log('ContentType:', settings.contentType);
-            },
-            success: function(response, textStatus, xhr) {
-                console.log('Server response received:', response);
-                console.log('Response status:', xhr.status);
-                console.log('Response headers:', xhr.getAllResponseHeaders());
-                
-                if (response && response.success) {
-                    showFeedback(response.message || 'File registered successfully!');
-                    
-                    // Reset form and close modal after delay
-                    setTimeout(function() {
-                        form.reset();
-                        $('#filePreview').addClass('hidden');
-                        $('#uploadFeedback').addClass('hidden');
-                        
-                        // Close modal
-                        const modal = bootstrap.Modal.getInstance(document.getElementById('uploadModal'));
-                        if (modal) {
-                            modal.hide();
-                        } else {
-                            $('#uploadModal').modal('hide');
-                        }
-                        
-                        // Refresh file list
-                        if (typeof window.refreshFilesList === 'function') {
-                            window.refreshFilesList();
-                        } else {
-                            location.reload();
-                        }
-                    }, 2000);
-                } else {
-                    const errorMsg = response ? (response.message || 'Unknown error occurred') : 'Invalid server response';
-                    console.error('Server error:', errorMsg);
-                    showFeedback(errorMsg, true);
-                }
-            },
-            error: function(xhr, status, error) {
-                console.error('AJAX Error Details:');
-                console.error('Status:', status);
-                console.error('Error:', error);
-                console.error('Response Status:', xhr.status);
-                console.error('Response Text:', xhr.responseText);
-                console.error('Ready State:', xhr.readyState);
-                console.error('Response Headers:', xhr.getAllResponseHeaders());
-                
-                let errorMsg = 'Network error occurred';
-                if (xhr.status === 0) {
-                    errorMsg = 'Network error - please check your connection';
-                } else if (xhr.status === 404) {
-                    errorMsg = 'API endpoint not found (404) - Check if api/files.php exists';
-                } else if (xhr.status === 405) {
-                    errorMsg = 'Method not allowed (405) - Server rejecting POST request';
-                } else if (xhr.status === 500) {
-                    errorMsg = 'Server error (500)';
-                } else if (status === 'timeout') {
-                    errorMsg = 'Request timed out - please try again';
-                } else if (xhr.responseText) {
-                    try {
-                        const errorResponse = JSON.parse(xhr.responseText);
-                        errorMsg = errorResponse.message || errorMsg;
-                    } catch (e) {
-                        errorMsg = xhr.responseText.length > 100 ? 
-                                xhr.responseText.substring(0, 100) + '...' : 
-                                xhr.responseText;
-                    }
-                }
-                
-                showFeedback(errorMsg, true);
-            },
-            complete: function(xhr, status) {
-                console.log('Request completed with status:', status);
-                setLoadingState(false);
-            }
-        });
-    });
-
-    // Reset modal when closed
-    $('#uploadModal').on('hidden.bs.modal', function() {
-        console.log('Modal closed - resetting form');
-        $('#uploadForm')[0].reset();
-        $('#filePreview').addClass('hidden');
-        $('#uploadFeedback').addClass('hidden').removeClass('bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-300 bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-300');
-        setLoadingState(false);
     });
 
     // Set default date to today
-    $('#date_of_origination').val(new Date().toISOString().split('T')[0]);
-    
-    console.log('Upload modal script fully loaded');
+    document.getElementById('date_of_origination').value = new Date().toISOString().split('T')[0];
 });
 </script>
